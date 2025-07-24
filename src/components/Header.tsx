@@ -6,10 +6,10 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navigation = [
-    { name: "Features", href: "#features" },
-    { name: "How It Works", href: "#how-it-works" },
-    { name: "About", href: "#about" },
-    { name: "Contact", href: "#contact" }
+    { name: "Home", href: "/" },
+    { name: "Dashboard", href: "/dashboard" },
+    { name: "Names", href: "/names" },
+    { name: "Recovery", href: "/recovery" }
   ];
 
   return (
@@ -48,13 +48,13 @@ const Header = () => {
               size="sm"
               className="border-border bg-card/30 hover:bg-card/50"
             >
-              Demo
+              <a href="/create-wallet">Create Wallet</a>
             </Button>
             <Button 
               size="sm"
               className="bg-gradient-hero text-primary-foreground hover:shadow-glow transition-all duration-300"
             >
-              Get Access
+              <a href="/dashboard">Dashboard</a>
             </Button>
           </div>
 
@@ -91,13 +91,13 @@ const Header = () => {
                   size="sm"
                   className="border-border bg-card/30 hover:bg-card/50 w-full"
                 >
-                  Demo
+                  <a href="/create-wallet">Create Wallet</a>
                 </Button>
                 <Button 
                   size="sm"
                   className="bg-gradient-hero text-primary-foreground hover:shadow-glow transition-all duration-300 w-full"
                 >
-                  Get Access
+                  <a href="/dashboard">Dashboard</a>
                 </Button>
               </div>
             </div>
