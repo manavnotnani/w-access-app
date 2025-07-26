@@ -40,3 +40,9 @@
 .read-the-docs {
   color: #888;
 }
+
+.text-gradient {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
