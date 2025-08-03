@@ -56,7 +56,7 @@ const CreateWallet = () => {
                     placeholder="alice"
                     className="rounded-r-none"
                   />
-                  <div className="px-3 py-2 bg-muted border border-l-0 rounded-r-md text-sm text-muted-foreground">
+                  <div className="px-3 py-2 bg-muted border border-l-0 rounded-r-md text-sm text-muted-foreground whitespace-nowrap">
                     .w-chain
                   </div>
                 </div>
@@ -217,7 +217,7 @@ const CreateWallet = () => {
               <CardContent className="pt-6">
                 <div className="space-y-4">
                   <div className="text-center">
-                    <div className="text-lg font-semibold text-primary">{walletName}.w-chain</div>
+                    <div className="text-lg font-semibold text-primary whitespace-nowrap">{walletName}.w-chain</div>
                     <div className="text-sm text-muted-foreground">0x1234...5678</div>
                   </div>
                   <div className="flex justify-center gap-2">

@@ -23,7 +23,7 @@ const Header = () => {
               alt="W-Access" 
               className="w-8 h-8"
             />
-            <span className="text-xl font-bold bg-gradient-hero bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-hero bg-clip-text text-transparent whitespace-nowrap">
               W-ACCESS
             </span>
           </div>
