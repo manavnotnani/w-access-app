@@ -123,10 +123,13 @@ const Hero = () => {
             <Button
               size="lg"
               className="group relative bg-gradient-to-r from-gold to-blue-accent text-primary-foreground px-8 py-5 text-lg font-semibold overflow-hidden"
+              asChild
             >
-              <span className="relative z-10">Get Started Now</span>
-              <ArrowRight className="ml-2 w-5 h-5 z-10 transition-transform group-hover:translate-x-1" />
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-accent to-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <a href="/create-wallet">
+                <span className="relative z-10">Get Started Now</span>
+                <ArrowRight className="ml-2 w-5 h-5 z-10 transition-transform group-hover:translate-x-1" />
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-accent to-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </a>
             </Button>
 
             <Button
