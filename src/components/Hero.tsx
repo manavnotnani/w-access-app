@@ -1,10 +1,11 @@
+//Final
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Shield, Zap, Users } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion , Variants } from "framer-motion";
 
 const Hero = () => {
-  // Animation variants
-  const containerVariants = {
+  // Fixed variants with proper easing types
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -14,12 +15,15 @@ const Hero = () => {
     },
   };
 
-  const childVariants = {
+  const childVariants: Variants = {
     hidden: { y: 20, opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
-      transition: { duration: 0.6, ease: "easeOut" },
+      transition: { 
+        duration: 0.6, 
+        ease: "easeOut" // This is the correct easing function
+      },
     },
   };
 
@@ -28,9 +32,7 @@ const Hero = () => {
       {/* Background Effects */}
       <div className="absolute inset-0 bg-gradient-to-br from-gold/10 via-background to-blue-accent/10" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gold/5 via-transparent to-transparent" />
-      {/* Add grid pattern here */}
-      <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] bg-[size:40px_40px] opacity-5" />
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background z-10" />
+      {/* Grid pattern - make sure to create this file */}
 
       <div className="container mx-auto px-6 relative z-20 pt-16 pb-16">
         <motion.div
@@ -39,25 +41,21 @@ const Hero = () => {
           initial="hidden"
           animate="visible"
         >
-          {/* Logo with fixed placement */}
-          <motion.div
-            className="mb-8"
-            variants={childVariants}
-            style={{ marginTop: "2rem" }} // Added top margin
-          >
-            <img
-              src="/lovable-uploads/f03e8d40-ba1a-4f1e-a6c0-d0a28269e251.png"
-              alt="W-Access Logo"
-              className="w-32 h-32 mx-auto animate-float"
+          {/* Logo */}
+          <div className="mb-8 mt-5">
+            <img 
+              src="/lovable-uploads/transparent_logo.png" 
+              alt="W-Access Logo" 
+              className="w-32 h-32 mx-auto animate-float mix-blend-multiply dark:mix-blend-screen"
             />
-          </motion.div>
+          </div>
 
           {/* Main Headline */}
           <motion.h1
             className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight"
             variants={childVariants}
           >
-            <span className="block bg-gradient-to-r from-gold to-blue-accent bg-clip-text text-transparent">
+            <span className="block bg-gradient-to-r from-gold to-blue-accent bg-clip-text text-transparent pb-5">
               Simplifying Web3 for Everyone on W-Chain
             </span>
           </motion.h1>

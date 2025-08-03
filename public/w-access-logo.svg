@@ -1,0 +1,18 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield-like outline with circuit board aesthetic -->
+  <path d="M20 25C20 20 25 15 30 15H40C45 15 50 20 50 25V35C50 40 45 45 40 45H30C25 45 20 40 20 35V25Z" stroke="#F5B400" stroke-width="3" fill="none"/>
+  
+  <!-- Top connection nodes -->
+  <circle cx="25" cy="20" r="3" fill="#F5B400"/>
+  <circle cx="45" cy="20" r="3" fill="#F5B400"/>
+  
+  <!-- Bold metallic W letter -->
+  <path d="M25 30L30 40L35 30L40 40L45 30" stroke="#F5B400" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Blue key element extending from bottom -->
+  <path d="M35 40L35 48M33 46L37 46" stroke="#3B82F6" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <circle cx="35" cy="50" r="2.5" fill="#3B82F6"/>
+  
+  <!-- W-ACCESS text in white -->
+  <text x="64" y="110" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="white">W-ACCESS</text>
+</svg> 

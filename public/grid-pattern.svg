@@ -1,5 +1,5 @@
-<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-  <path d="M0 20L40 20M20 0L20 40" 
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+  <path d="M0 20H40M20 0V40" 
         stroke="currentColor" 
         stroke-opacity="0.05" 
         stroke-width="1" />

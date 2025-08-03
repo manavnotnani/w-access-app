@@ -88,7 +88,7 @@ const Footer = () => {
         <div className="border-t border-border/30 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-muted-foreground text-sm">
-              © 2024 W-Access. Built for W-Chain. All rights reserved.
+              © 2025 W-Access. Built for W-Chain. All rights reserved.
             </div>
             <div className="flex items-center space-x-6 text-sm">
               <a href="#privacy" className="text-muted-foreground hover:text-gold transition-colors">
