@@ -9,6 +9,8 @@ import CreateWallet from "./pages/CreateWallet";
 import NameService from "./pages/NameService";
 import Recovery from "./pages/Recovery";
 import Settings from "./pages/Settings";
+import SecuritySetup from "./pages/SecuritySetup";
+import WalletTutorial from "./pages/WalletTutorial";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +28,8 @@ const App = () => (
           <Route path="/names" element={<NameService />} />
           <Route path="/recovery" element={<Recovery />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/security-setup" element={<SecuritySetup />} />
+          <Route path="/wallet-tutorial" element={<WalletTutorial />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

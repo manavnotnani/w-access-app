@@ -1,0 +1,233 @@
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Switch } from "@/components/ui/switch";
+import { Shield, Key, Smartphone, Mail, CheckCircle, ArrowRight, Lock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
+const SecuritySetup = () => {
+  const [recoveryEmail, setRecoveryEmail] = useState("");
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [setupComplete, setSetupComplete] = useState(false);
+  const navigate = useNavigate();
+
+  const securityFeatures = [
+    {
+      id: "recovery",
+      title: "Recovery Email",
+      description: "Add an email for account recovery assistance",
+      icon: Mail,
+      status: recoveryEmail ? "complete" : "pending",
+      required: true
+    },
+    {
+      id: "2fa",
+      title: "Two-Factor Authentication",
+      description: "Extra security layer using your phone",
+      icon: Smartphone,
+      status: twoFactorEnabled ? "complete" : "optional",
+      required: false
+    },
+    {
+      id: "biometric",
+      title: "Biometric Lock",
+      description: "Use fingerprint or face ID to access wallet",
+      icon: Key,
+      status: biometricEnabled ? "complete" : "optional",
+      required: false
+    }
+  ];
+
+  const handleComplete = () => {
+    setSetupComplete(true);
+    setTimeout(() => {
+      navigate("/wallet-tutorial");
+    }, 2000);
+  };
+
+  if (setupComplete) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md mx-auto border-primary/20">
+          <CardContent className="pt-6 text-center">
+            <div className="w-16 h-16 mx-auto bg-gradient-primary rounded-full flex items-center justify-center mb-4">
+              <CheckCircle className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Security Setup Complete!</h2>
+            <p className="text-muted-foreground mb-4">Your wallet is now protected with enhanced security features.</p>
+            <div className="flex justify-center gap-2 mb-4">
+              <Badge variant="secondary">✓ Secure</Badge>
+              <Badge variant="secondary">✓ Protected</Badge>
+              <Badge variant="secondary">✓ Ready</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground">Redirecting to tutorial...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <div className="w-16 h-16 mx-auto bg-gradient-primary rounded-full flex items-center justify-center mb-4">
+            <Shield className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
+            Secure Your Wallet
+          </h1>
+          <p className="text-muted-foreground">
+            Set up additional security features to protect your W-Access wallet
+          </p>
+        </div>
+
+        {/* Security Features */}
+        <div className="space-y-6 mb-8">
+          {/* Recovery Email */}
+          <Card className="border-primary/20">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Mail className="w-5 h-5 text-primary" />
+                  <div>
+                    <CardTitle className="text-lg">Recovery Email</CardTitle>
+                    <CardDescription>Add an email for account recovery assistance</CardDescription>
+                  </div>
+                </div>
+                <Badge variant={recoveryEmail ? "default" : "outline"}>
+                  {recoveryEmail ? "Complete" : "Required"}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="recovery-email">Email Address</Label>
+                  <Input
+                    id="recovery-email"
+                    type="email"
+                    value={recoveryEmail}
+                    onChange={(e) => setRecoveryEmail(e.target.value)}
+                    placeholder="your@email.com"
+                  />
+                </div>
+                <Alert>
+                  <Shield className="h-4 w-4" />
+                  <AlertDescription>
+                    This email will only be used for account recovery. We'll never spam you.
+                  </AlertDescription>
+                </Alert>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Two-Factor Authentication */}
+          <Card className="border-primary/20">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Smartphone className="w-5 h-5 text-primary" />
+                  <div>
+                    <CardTitle className="text-lg">Two-Factor Authentication</CardTitle>
+                    <CardDescription>Extra security layer using your phone</CardDescription>
+                  </div>
+                </div>
+                <Switch
+                  checked={twoFactorEnabled}
+                  onCheckedChange={setTwoFactorEnabled}
+                />
+              </div>
+            </CardHeader>
+            {twoFactorEnabled && (
+              <CardContent>
+                <Alert>
+                  <Smartphone className="h-4 w-4" />
+                  <AlertDescription>
+                    Scan the QR code with your authenticator app to complete setup.
+                  </AlertDescription>
+                </Alert>
+              </CardContent>
+            )}
+          </Card>
+
+          {/* Biometric Lock */}
+          <Card className="border-primary/20">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Key className="w-5 h-5 text-primary" />
+                  <div>
+                    <CardTitle className="text-lg">Biometric Lock</CardTitle>
+                    <CardDescription>Use fingerprint or face ID to access wallet</CardDescription>
+                  </div>
+                </div>
+                <Switch
+                  checked={biometricEnabled}
+                  onCheckedChange={setBiometricEnabled}
+                />
+              </div>
+            </CardHeader>
+            {biometricEnabled && (
+              <CardContent>
+                <Alert>
+                  <Lock className="h-4 w-4" />
+                  <AlertDescription>
+                    Biometric authentication will be required to access your wallet on this device.
+                  </AlertDescription>
+                </Alert>
+              </CardContent>
+            )}
+          </Card>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col gap-4">
+          <Button
+            onClick={handleComplete}
+            disabled={!recoveryEmail}
+            className="w-full bg-gradient-primary hover:opacity-90"
+            size="lg"
+          >
+            Complete Security Setup
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/wallet-tutorial")}
+            className="w-full"
+          >
+            Skip for Now
+          </Button>
+        </div>
+
+        {/* Security Summary */}
+        <div className="mt-8 p-4 bg-gradient-subtle rounded-lg border border-primary/20">
+          <h3 className="font-semibold mb-2">Security Level</h3>
+          <div className="flex gap-2 mb-2">
+            {securityFeatures.map((feature) => (
+              <Badge
+                key={feature.id}
+                variant={feature.status === "complete" ? "default" : "outline"}
+                className="text-xs"
+              >
+                {feature.title}
+              </Badge>
+            ))}
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {securityFeatures.filter(f => f.status === "complete").length} of {securityFeatures.length} security features enabled
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SecuritySetup;
