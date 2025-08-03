@@ -125,3 +125,39 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .bg-gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--gold)) 0%, hsl(var(--blue-accent)) 100%);
+  }
+  
+  .no-focus-ring {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: hsl(var(--border)) !important;
+  }
+  
+  .no-focus-ring:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: hsl(var(--border)) !important;
+  }
+  
+  .no-focus-ring:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: hsl(var(--border)) !important;
+  }
+}
+
+/* Override input focus styles with higher specificity */
+input[type="text"]:focus,
+input[type="text"]:focus-visible,
+input:focus,
+input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: hsl(var(--border)) !important;
+  ring: none !important;
+  ring-offset: none !important;
+}
