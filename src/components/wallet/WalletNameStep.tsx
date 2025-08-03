@@ -2,7 +2,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Wallet, Shield } from "lucide-react";
+import { Wallet, Shield, CheckCircle, XCircle, Clock } from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface WalletNameStepProps {
   walletName: string;
@@ -10,6 +11,76 @@ interface WalletNameStepProps {
 }
 
 export const WalletNameStep = ({ walletName, setWalletName }: WalletNameStepProps) => {
+  const [isChecking, setIsChecking] = useState(false);
+  const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+  
+  // Simulate username availability check
+  useEffect(() => {
+    if (!walletName) {
+      setIsAvailable(null);
+      return;
+    }
+    
+    setIsChecking(true);
+    const checkAvailability = setTimeout(() => {
+      // Simulate some taken usernames
+      const takenNames = ['admin', 'test', 'wallet', 'bitcoin', 'ethereum', 'alice', 'bob'];
+      setIsAvailable(!takenNames.includes(walletName.toLowerCase()));
+      setIsChecking(false);
+    }, 500);
+    
+    return () => clearTimeout(checkAvailability);
+  }, [walletName]);
+
+  const getStatusBadges = () => {
+    if (!walletName) return null;
+    
+    const badges = [];
+    
+    // Availability badge
+    if (isChecking) {
+      badges.push(
+        <Badge key="checking" variant="outline" className="text-amber-600 border-amber-200">
+          <Clock className="w-3 h-3 mr-1" />
+          Checking...
+        </Badge>
+      );
+    } else if (isAvailable === true) {
+      badges.push(
+        <Badge key="available" variant="outline" className="text-green-600 border-green-200">
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Available
+        </Badge>
+      );
+    } else if (isAvailable === false) {
+      badges.push(
+        <Badge key="taken" variant="outline" className="text-red-600 border-red-200">
+          <XCircle className="w-3 h-3 mr-1" />
+          Already taken
+        </Badge>
+      );
+    }
+    
+    // Other badges
+    if (walletName.length >= 3 && walletName.length <= 20) {
+      badges.push(
+        <Badge key="length" variant="outline" className="text-green-600 border-green-200">
+          Good length
+        </Badge>
+      );
+    }
+    
+    if (/^[a-zA-Z0-9]+$/.test(walletName)) {
+      badges.push(
+        <Badge key="format" variant="outline" className="text-green-600 border-green-200">
+          Valid format
+        </Badge>
+      );
+    }
+    
+    return badges;
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center space-y-4">
@@ -44,11 +115,20 @@ export const WalletNameStep = ({ walletName, setWalletName }: WalletNameStepProp
           </AlertDescription>
         </Alert>
 
-        <div className="flex gap-2">
-          <Badge variant="outline">Available</Badge>
-          <Badge variant="outline">Easy to remember</Badge>
-          <Badge variant="outline">Unique</Badge>
-        </div>
+        {isAvailable === false && (
+          <Alert variant="destructive">
+            <XCircle className="h-4 w-4" />
+            <AlertDescription>
+              This name is already taken. Please try a different one.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {getStatusBadges() && (
+          <div className="flex gap-2 flex-wrap">
+            {getStatusBadges()}
+          </div>
+        )}
       </div>
     </div>
   );

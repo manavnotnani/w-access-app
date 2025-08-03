@@ -120,7 +120,7 @@ const CreateWallet = () => {
                 setStep(Math.min(5, step + 1));
               }
             }}
-            disabled={step === 1 && !walletName}
+            disabled={step === 1 && (!walletName || walletName.length < 3)}
             className="bg-gradient-primary hover:opacity-90"
           >
             {step === 5 ? 'Go to Dashboard' : 'Continue'}
