@@ -27,6 +27,16 @@ const Hero = () => {
     },
   };
 
+  const scrollToFeatures = () => {
+    const featuresSection = document.getElementById('features');
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  };
+
   return (
     <section className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background">
       {/* Background Effects */}
@@ -123,6 +133,7 @@ const Hero = () => {
               variant="outline"
               size="lg"
               className="px-8 py-5 text-lg bg-transparent border-2 border-gold/40 hover:border-blue-accent group transition-colors"
+              onClick={scrollToFeatures}
             >
               <span className="bg-gradient-to-r from-gold to-blue-accent bg-clip-text text-transparent group-hover:from-blue-accent group-hover:to-gold transition-all">
                 Explore Features

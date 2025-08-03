@@ -51,7 +51,7 @@ const Features = () => {
   ];
 
   return (
-    <section className="py-24 bg-dark-surface/30 relative">
+    <section id="features" className="py-24 bg-dark-surface/30 relative">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-accent/5 to-transparent" />
       
       <div className="container mx-auto px-6 relative z-10">
