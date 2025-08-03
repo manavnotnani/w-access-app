@@ -10,13 +10,17 @@ import { KeyGenerationStep } from "@/components/wallet/KeyGenerationStep";
 import { SeedPhraseStep } from "@/components/wallet/SeedPhraseStep";
 import { VerificationStep } from "@/components/wallet/VerificationStep";
 import { CompleteStep } from "@/components/wallet/CompleteStep";
+import { walletService } from "@/lib/database";
+import { useToast } from "@/hooks/use-toast";
 
 const CreateWallet = () => {
   const [step, setStep] = useState(1);
   const [walletName, setWalletName] = useState("");
   const [showSeedPhrase, setShowSeedPhrase] = useState(false);
   const [confirmedWords, setConfirmedWords] = useState<number[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const seedPhrase = [
     "abandon", "ability", "able", "about", "above", "absent",
@@ -35,6 +39,53 @@ const CreateWallet = () => {
 
   const currentStep = steps.find(s => s.id === step);
   const progress = (step / steps.length) * 100;
+
+  const handleContinue = async () => {
+    if (step === 5) {
+      // Save wallet to database
+      setIsSaving(true);
+      try {
+        // Generate a mock user ID (in real app, this would come from auth)
+        const userId = crypto.randomUUID();
+        
+        // Generate a mock wallet address (in real app, this would be generated from seed phrase)
+        const walletAddress = `0x${crypto.randomUUID().replace(/-/g, '').substring(0, 40)}`;
+        
+        // Hash the seed phrase (in real app, use proper encryption)
+        const seedPhraseHash = btoa(seedPhrase.join(' '));
+        
+        const walletData = {
+          user_id: userId,
+          name: walletName,
+          address: walletAddress,
+          seed_phrase_hash: seedPhraseHash
+        };
+
+        const savedWallet = await walletService.createWallet(walletData);
+        
+        if (savedWallet) {
+          toast({
+            title: "Wallet Created!",
+            description: `Wallet "${walletName}.w-chain" has been successfully created.`,
+          });
+          navigate("/security-setup");
+        } else {
+          throw new Error("Failed to save wallet");
+        }
+      } catch (error) {
+        console.error("Error saving wallet:", error);
+        toast({
+          title: "Error",
+          description: "Failed to create wallet. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSaving(false);
+      }
+    } else {
+      setStep(Math.min(5, step + 1));
+    }
+  };
 
   const renderStepContent = () => {
     switch (step) {
@@ -113,17 +164,15 @@ const CreateWallet = () => {
             Previous
           </Button>
           <Button
-            onClick={() => {
-              if (step === 5) {
-                navigate("/security-setup");
-              } else {
-                setStep(Math.min(5, step + 1));
-              }
-            }}
-            disabled={step === 1 && (!walletName || walletName.length < 3)}
+            onClick={handleContinue}
+            disabled={
+              (step === 1 && (!walletName || walletName.length < 3)) ||
+              (step === 4 && confirmedWords.length !== verificationWords.length) ||
+              isSaving
+            }
             className="bg-gradient-primary hover:opacity-90"
           >
-            {step === 5 ? 'Go to Dashboard' : 'Continue'}
+            {isSaving ? 'Creating Wallet...' : step === 5 ? 'Create Wallet' : 'Continue'}
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
