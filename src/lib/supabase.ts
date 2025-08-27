@@ -20,25 +20,18 @@ export interface Wallet {
   updated_at: string
 }
 
-export interface User {
-  id: string
-  email?: string
-  created_at: string
-  updated_at: string
-}
-
 export interface RecoveryMethod {
   id: string
-  user_id: string
+  wallet_id: string
   type: 'email' | 'phone' | 'backup_codes'
   value: string
   is_verified: boolean
   created_at: string
 }
 
-export interface UserSettings {
+export interface WalletSettings {
   id: string
-  user_id: string
+  wallet_id: string
   theme: 'light' | 'dark' | 'system'
   notifications_enabled: boolean
   security_level: 'basic' | 'advanced'

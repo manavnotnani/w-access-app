@@ -1,4 +1,4 @@
-import { supabase, Wallet, User, RecoveryMethod, UserSettings } from './supabase'
+import { supabase, Wallet, RecoveryMethod, WalletSettings } from './supabase'
 
 // Wallet operations
 export const walletService = {
@@ -19,7 +19,7 @@ export const walletService = {
   },
 
   // Create a new wallet
-  async createWallet(walletData: Omit<Wallet, 'id' | 'created_at' | 'updated_at'>): Promise<Wallet | null> {
+  async createWallet(walletData: Omit<Wallet, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Wallet | null> {
     const { data, error } = await supabase
       .from('wallets')
       .insert([walletData])
@@ -34,16 +34,15 @@ export const walletService = {
     return data
   },
 
-  // Get user's wallets
-  async getUserWallets(userId: string): Promise<Wallet[]> {
+  // Get all wallets (for development/demo purposes)
+  async getAllWallets(): Promise<Wallet[]> {
     const { data, error } = await supabase
       .from('wallets')
       .select('*')
-      .eq('user_id', userId)
       .order('created_at', { ascending: false })
     
     if (error) {
-      console.error('Error fetching user wallets:', error)
+      console.error('Error fetching wallets:', error)
       return []
     }
     
@@ -64,6 +63,38 @@ export const walletService = {
     }
     
     return data
+  },
+
+  // Get wallet by address
+  async getWalletByAddress(address: string): Promise<Wallet | null> {
+    const { data, error } = await supabase
+      .from('wallets')
+      .select('*')
+      .eq('address', address)
+      .single()
+    
+    if (error) {
+      console.error('Error fetching wallet by address:', error)
+      return null
+    }
+    
+    return data
+  },
+
+  // Check if wallet address exists
+  async checkAddressExists(address: string): Promise<boolean> {
+    const { data, error } = await supabase
+      .from('wallets')
+      .select('address')
+      .eq('address', address)
+      .single()
+    
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error checking address existence:', error)
+      return false
+    }
+    
+    return !!data
   },
 
   // Update wallet
@@ -96,41 +127,23 @@ export const walletService = {
     }
     
     return true
-  }
-}
-
-// User operations
-export const userService = {
-  // Create or get user
-  async createUser(userData: Partial<User>): Promise<User | null> {
-    const { data, error } = await supabase
-      .from('users')
-      .upsert([userData], { onConflict: 'id' })
-      .select()
-      .single()
-    
-    if (error) {
-      console.error('Error creating user:', error)
-      return null
-    }
-    
-    return data
   },
 
-  // Get user by ID
-  async getUser(userId: string): Promise<User | null> {
+  // Get wallet statistics
+  async getWalletStats(): Promise<{ total: number; active: number }> {
     const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single()
+      .from('wallets')
+      .select('id')
     
     if (error) {
-      console.error('Error fetching user:', error)
-      return null
+      console.error('Error fetching wallet stats:', error)
+      return { total: 0, active: 0 }
     }
     
-    return data
+    return {
+      total: data?.length || 0,
+      active: data?.length || 0 // Assuming all wallets are active
+    }
   }
 }
 
@@ -152,12 +165,12 @@ export const recoveryService = {
     return data
   },
 
-  // Get user's recovery methods
-  async getUserRecoveryMethods(userId: string): Promise<RecoveryMethod[]> {
+  // Get wallet's recovery methods
+  async getWalletRecoveryMethods(walletId: string): Promise<RecoveryMethod[]> {
     const { data, error } = await supabase
       .from('recovery_methods')
       .select('*')
-      .eq('user_id', userId)
+      .eq('wallet_id', walletId)
       .order('created_at', { ascending: false })
     
     if (error) {
@@ -184,34 +197,34 @@ export const recoveryService = {
   }
 }
 
-// Settings operations
+// Wallet settings operations
 export const settingsService = {
-  // Get user settings
-  async getUserSettings(userId: string): Promise<UserSettings | null> {
+  // Get wallet settings
+  async getWalletSettings(walletId: string): Promise<WalletSettings | null> {
     const { data, error } = await supabase
-      .from('user_settings')
+      .from('wallet_settings')
       .select('*')
-      .eq('user_id', userId)
+      .eq('wallet_id', walletId)
       .single()
     
     if (error && error.code !== 'PGRST116') {
-      console.error('Error fetching user settings:', error)
+      console.error('Error fetching wallet settings:', error)
       return null
     }
     
     return data
   },
 
-  // Create or update user settings
-  async upsertUserSettings(settingsData: Omit<UserSettings, 'id' | 'created_at' | 'updated_at'>): Promise<UserSettings | null> {
+  // Create or update wallet settings
+  async upsertWalletSettings(settingsData: Omit<WalletSettings, 'id' | 'created_at' | 'updated_at'>): Promise<WalletSettings | null> {
     const { data, error } = await supabase
-      .from('user_settings')
-      .upsert([settingsData], { onConflict: 'user_id' })
+      .from('wallet_settings')
+      .upsert([settingsData], { onConflict: 'wallet_id' })
       .select()
       .single()
     
     if (error) {
-      console.error('Error upserting user settings:', error)
+      console.error('Error upserting wallet settings:', error)
       return null
     }
     

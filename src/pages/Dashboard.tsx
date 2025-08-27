@@ -20,10 +20,8 @@ const Dashboard = () => {
 
   const loadWallets = async () => {
     try {
-      // For demo purposes, we'll use a mock user ID
-      // In a real app, this would come from authentication
-      const mockUserId = "demo-user-id";
-      const userWallets = await walletService.getUserWallets(mockUserId);
+      // Get all wallets (no user authentication needed)
+      const userWallets = await walletService.getAllWallets();
       setWallets(userWallets);
     } catch (error) {
       console.error("Error loading wallets:", error);

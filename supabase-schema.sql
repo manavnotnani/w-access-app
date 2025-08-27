@@ -1,18 +1,10 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Users table
-CREATE TABLE IF NOT EXISTS users (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  email TEXT UNIQUE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Wallets table
+-- Wallets table (primary entity - no user authentication needed)
 CREATE TABLE IF NOT EXISTS wallets (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID DEFAULT uuid_generate_v4(), -- Auto-generated user ID
   name TEXT UNIQUE NOT NULL,
   address TEXT UNIQUE NOT NULL,
   seed_phrase_hash TEXT NOT NULL,
@@ -20,20 +12,20 @@ CREATE TABLE IF NOT EXISTS wallets (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Recovery methods table
+-- Recovery methods table (linked to wallets)
 CREATE TABLE IF NOT EXISTS recovery_methods (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  wallet_id UUID REFERENCES wallets(id) ON DELETE CASCADE,
   type TEXT NOT NULL CHECK (type IN ('email', 'phone', 'backup_codes')),
   value TEXT NOT NULL,
   is_verified BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- User settings table
-CREATE TABLE IF NOT EXISTS user_settings (
+-- Wallet settings table (linked to wallets)
+CREATE TABLE IF NOT EXISTS wallet_settings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+  wallet_id UUID REFERENCES wallets(id) ON DELETE CASCADE UNIQUE,
   theme TEXT DEFAULT 'system' CHECK (theme IN ('light', 'dark', 'system')),
   notifications_enabled BOOLEAN DEFAULT TRUE,
   security_level TEXT DEFAULT 'basic' CHECK (security_level IN ('basic', 'advanced')),
@@ -45,8 +37,8 @@ CREATE TABLE IF NOT EXISTS user_settings (
 CREATE INDEX IF NOT EXISTS idx_wallets_user_id ON wallets(user_id);
 CREATE INDEX IF NOT EXISTS idx_wallets_name ON wallets(name);
 CREATE INDEX IF NOT EXISTS idx_wallets_address ON wallets(address);
-CREATE INDEX IF NOT EXISTS idx_recovery_methods_user_id ON recovery_methods(user_id);
-CREATE INDEX IF NOT EXISTS idx_user_settings_user_id ON user_settings(user_id);
+CREATE INDEX IF NOT EXISTS idx_recovery_methods_wallet_id ON recovery_methods(wallet_id);
+CREATE INDEX IF NOT EXISTS idx_wallet_settings_wallet_id ON wallet_settings(wallet_id);
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -58,63 +50,46 @@ END;
 $$ language 'plpgsql';
 
 -- Create triggers for updated_at
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
 CREATE TRIGGER update_wallets_updated_at BEFORE UPDATE ON wallets
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_user_settings_updated_at BEFORE UPDATE ON user_settings
+CREATE TRIGGER update_wallet_settings_updated_at BEFORE UPDATE ON wallet_settings
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Row Level Security (RLS) policies
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+-- Row Level Security (RLS) policies - Simplified for wallet-centric approach
 ALTER TABLE wallets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recovery_methods ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wallet_settings ENABLE ROW LEVEL SECURITY;
 
--- Users policies
-CREATE POLICY "Users can view own profile" ON users
-  FOR SELECT USING (auth.uid() = id);
+-- Development-friendly policies (allows all operations for development)
+-- In production, these can be kept simple since wallets are the primary entities
 
-CREATE POLICY "Users can update own profile" ON users
-  FOR UPDATE USING (auth.uid() = id);
+-- Wallets policies - Allow all operations for development
+CREATE POLICY "Allow all wallets operations for development" ON wallets
+  FOR ALL USING (true);
 
--- Wallets policies
-CREATE POLICY "Users can view own wallets" ON wallets
-  FOR SELECT USING (auth.uid() = user_id);
+-- Recovery methods policies - Allow all operations for development
+CREATE POLICY "Allow all recovery methods operations for development" ON recovery_methods
+  FOR ALL USING (true);
 
-CREATE POLICY "Users can insert own wallets" ON wallets
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+-- Wallet settings policies - Allow all operations for development
+CREATE POLICY "Allow all wallet settings operations for development" ON wallet_settings
+  FOR ALL USING (true);
 
-CREATE POLICY "Users can update own wallets" ON wallets
-  FOR UPDATE USING (auth.uid() = user_id);
+-- Production-ready policies (commented out for development)
+-- These can be simple since wallets are self-contained entities
 
-CREATE POLICY "Users can delete own wallets" ON wallets
-  FOR DELETE USING (auth.uid() = user_id);
-
--- Recovery methods policies
-CREATE POLICY "Users can view own recovery methods" ON recovery_methods
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own recovery methods" ON recovery_methods
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own recovery methods" ON recovery_methods
-  FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own recovery methods" ON recovery_methods
-  FOR DELETE USING (auth.uid() = user_id);
-
--- User settings policies
-CREATE POLICY "Users can view own settings" ON user_settings
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own settings" ON user_settings
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own settings" ON user_settings
-  FOR UPDATE USING (auth.uid() = user_id);
+-- -- Wallets policies
+-- CREATE POLICY "Allow all wallet operations" ON wallets
+--   FOR ALL USING (true);
+-- 
+-- -- Recovery methods policies
+-- CREATE POLICY "Allow all recovery method operations" ON recovery_methods
+--   FOR ALL USING (true);
+-- 
+-- -- Wallet settings policies
+-- CREATE POLICY "Allow all wallet setting operations" ON wallet_settings
+--   FOR ALL USING (true);
 
 -- Public function to check wallet name availability
 CREATE OR REPLACE FUNCTION check_wallet_name_availability(name_to_check TEXT)
@@ -123,5 +98,24 @@ BEGIN
   RETURN NOT EXISTS (
     SELECT 1 FROM wallets WHERE name = name_to_check
   );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to get wallet by address
+CREATE OR REPLACE FUNCTION get_wallet_by_address(wallet_address TEXT)
+RETURNS TABLE (
+  id UUID,
+  user_id UUID,
+  name TEXT,
+  address TEXT,
+  seed_phrase_hash TEXT,
+  created_at TIMESTAMP WITH TIME ZONE,
+  updated_at TIMESTAMP WITH TIME ZONE
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT w.id, w.user_id, w.name, w.address, w.seed_phrase_hash, w.created_at, w.updated_at
+  FROM wallets w
+  WHERE w.address = wallet_address;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER; 

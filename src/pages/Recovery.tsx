@@ -6,16 +6,73 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Key, AlertTriangle, CheckCircle, RefreshCw, Download, Upload } from "lucide-react";
+import { Shield, Key, AlertTriangle, CheckCircle, RefreshCw, Download, Upload, Loader2 } from "lucide-react";
+import { CryptoService, WalletKeys } from "@/lib/crypto";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const Recovery = () => {
   const [seedPhrase, setSeedPhrase] = useState(Array(12).fill(""));
   const [recoveryMethod, setRecoveryMethod] = useState<string>("");
+  const [isRecovering, setIsRecovering] = useState(false);
+  const [recoveredWallet, setRecoveredWallet] = useState<WalletKeys | null>(null);
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSeedPhraseChange = (index: number, value: string) => {
     const newSeedPhrase = [...seedPhrase];
-    newSeedPhrase[index] = value;
+    newSeedPhrase[index] = value.toLowerCase().trim();
     setSeedPhrase(newSeedPhrase);
+    setRecoveryError(null); // Clear error when user types
+  };
+
+  const handleRecoverWallet = async () => {
+    const mnemonic = seedPhrase.join(' ').trim();
+    
+    if (mnemonic.split(' ').length !== 12) {
+      setRecoveryError("Please enter all 12 words");
+      return;
+    }
+
+    setIsRecovering(true);
+    setRecoveryError(null);
+
+    try {
+      const wallet = await CryptoService.recoverWallet(mnemonic);
+      setRecoveredWallet(wallet);
+      
+      toast({
+        title: "Wallet Recovered!",
+        description: `Successfully recovered wallet: ${wallet.address.slice(0, 8)}...${wallet.address.slice(-6)}`,
+      });
+
+      // Navigate to dashboard or wallet view
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 2000);
+
+    } catch (error) {
+      console.error('Recovery error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to recover wallet';
+      setRecoveryError(errorMessage);
+      
+      toast({
+        title: "Recovery Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsRecovering(false);
+    }
+  };
+
+  const validateSeedPhrase = () => {
+    const mnemonic = seedPhrase.join(' ').trim();
+    if (mnemonic.split(' ').length !== 12) return false;
+    
+    // Check if all words are filled
+    return seedPhrase.every(word => word.trim() !== '');
   };
 
   const backupMethods = [
@@ -204,12 +261,43 @@ const Recovery = () => {
                             onChange={(e) => handleSeedPhraseChange(index, e.target.value)}
                             placeholder="word"
                             className="text-center font-mono"
+                            disabled={isRecovering}
                           />
                         </div>
                       ))}
                     </div>
-                    <Button className="w-full bg-gradient-primary hover:opacity-90">
-                      Recover Wallet
+                    
+                    {recoveryError && (
+                      <Alert variant="destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription>{recoveryError}</AlertDescription>
+                      </Alert>
+                    )}
+
+                    {recoveredWallet && (
+                      <Alert className="border-green-200 bg-green-50">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <AlertDescription className="text-green-800">
+                          <strong>Wallet recovered successfully!</strong><br />
+                          Address: {recoveredWallet.address}<br />
+                          Redirecting to dashboard...
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    <Button 
+                      className="w-full bg-gradient-primary hover:opacity-90"
+                      onClick={handleRecoverWallet}
+                      disabled={!validateSeedPhrase() || isRecovering}
+                    >
+                      {isRecovering ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Recovering Wallet...
+                        </>
+                      ) : (
+                        'Recover Wallet'
+                      )}
                     </Button>
                   </div>
                 )}
