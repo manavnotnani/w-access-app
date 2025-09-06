@@ -1,8 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle, Shield, Copy } from "lucide-react";
+import { CheckCircle, Shield, Copy, Wallet, AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { FundingService, FundingStatus } from "@/lib/funding";
+import { useToast } from "@/hooks/use-toast";
 
 interface CompleteStepProps {
   walletName: string;
@@ -10,13 +13,84 @@ interface CompleteStepProps {
 }
 
 export const CompleteStep = ({ walletName, walletAddress }: CompleteStepProps) => {
+  const [fundingStatus, setFundingStatus] = useState<FundingStatus | null>(null);
+  const [isFunding, setIsFunding] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (walletAddress) {
+      checkFundingStatus();
+    }
+  }, [walletAddress]);
+
+  const checkFundingStatus = async () => {
+    if (!walletAddress) return;
+    
+    setIsCheckingStatus(true);
+    try {
+      const status = await FundingService.getFundingStatus(walletAddress);
+      setFundingStatus(status);
+    } catch (error) {
+      console.error('Error checking funding status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to check funding status",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCheckingStatus(false);
+    }
+  };
+
+  const handleFundWallet = async () => {
+    if (!walletAddress) return;
+    
+    setIsFunding(true);
+    try {
+      const result = await FundingService.fundWallet(walletAddress);
+      
+      if (result.success) {
+        toast({
+          title: "Wallet Funded Successfully!",
+          description: `Your wallet has been funded with ${FundingService.getMinimumFundingAmount()} WCO tokens.`,
+        });
+        // Refresh funding status
+        await checkFundingStatus();
+      } else {
+        toast({
+          title: "Funding Failed",
+          description: result.error || "Failed to fund wallet",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error funding wallet:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while funding the wallet",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFunding(false);
+    }
+  };
+
   const handleCopyAddress = async () => {
     if (walletAddress) {
       try {
         await navigator.clipboard.writeText(walletAddress);
-        // You could add a toast notification here
+        toast({
+          title: "Address Copied",
+          description: "Wallet address copied to clipboard",
+        });
       } catch (error) {
         console.error('Failed to copy address:', error);
+        toast({
+          title: "Error",
+          description: "Failed to copy address",
+          variant: "destructive",
+        });
       }
     }
   };
@@ -58,10 +132,94 @@ export const CompleteStep = ({ walletName, walletAddress }: CompleteStepProps) =
               <Badge variant="secondary">✓ Secure</Badge>
               <Badge variant="secondary">✓ Backed Up</Badge>
               <Badge variant="secondary">✓ Ready</Badge>
+              {fundingStatus?.isFunded && (
+                <Badge variant="secondary" className="bg-green-100 text-green-800">✓ Funded</Badge>
+              )}
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Funding Section */}
+      {walletAddress && (
+        <Card className="border-primary/20">
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Wallet className="w-5 h-5 text-primary" />
+                <h3 className="text-lg font-semibold">Wallet Funding</h3>
+              </div>
+              
+              {isCheckingStatus ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Checking funding status...</span>
+                </div>
+              ) : fundingStatus ? (
+                <div className="space-y-3">
+                  {fundingStatus.isFunded ? (
+                    <div className="flex items-center gap-2 text-green-600">
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Wallet is funded and ready to use</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-amber-600">
+                        <AlertTriangle className="w-4 h-4" />
+                        <span>Wallet needs funding to be fully functional</span>
+                      </div>
+                      
+                      <div className="bg-muted/50 p-3 rounded-lg">
+                        <div className="text-sm space-y-1">
+                          <div className="flex justify-between">
+                            <span>Server Balance:</span>
+                            <span className="font-mono">{fundingStatus.balance} WCO</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Funding Amount:</span>
+                            <span className="font-mono">{fundingStatus.fundingAmount} WCO</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {fundingStatus.error ? (
+                        <Alert variant="destructive">
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertDescription>
+                            {fundingStatus.error}
+                          </AlertDescription>
+                        </Alert>
+                      ) : (
+                        <Button 
+                          onClick={handleFundWallet}
+                          disabled={isFunding}
+                          className="w-full bg-gradient-primary hover:opacity-90"
+                        >
+                          {isFunding ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Funding Wallet...
+                            </>
+                          ) : (
+                            <>
+                              <Wallet className="w-4 h-4 mr-2" />
+                              Fund Wallet ({fundingStatus.fundingAmount} WCO)
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-muted-foreground">
+                  Unable to check funding status
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Alert>
         <Shield className="h-4 w-4" />
