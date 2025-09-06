@@ -151,8 +151,7 @@ contract WalletImplementation is IERC1271 {
         results = new bytes[](destinations.length);
         
         for (uint256 i = 0; i < destinations.length; i++) {
-            require(destinations[i] != address(0), "Invalid destination");
-            
+            require(destinations[i] != address(0), "Invalid destination");           
             (bool success, bytes memory result) = destinations[i].call{value: values[i]}(functionCalls[i]);
             
             if (success) {
