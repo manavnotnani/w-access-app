@@ -78,7 +78,7 @@ export class FundingService {
   /**
    * Check if server has sufficient balance for funding
    */
-  static async hasSufficientBalance(fundingAmount: string = "0.01"): Promise<boolean> {
+  static async hasSufficientBalance(fundingAmount: string = "0.25"): Promise<boolean> {
     try {
       const balance = await this.getServerBalance();
       const balanceInWei = parseEther(balance);
@@ -98,7 +98,7 @@ export class FundingService {
   /**
    * Get funding status for a wallet
    */
-  static async getFundingStatus(walletAddress: string, fundingAmount: string = "0.01"): Promise<FundingStatus> {
+  static async getFundingStatus(walletAddress: string, fundingAmount: string = "0.25"): Promise<FundingStatus> {
     try {
       const serverBalance = await this.getServerBalance();
       const hasBalance = await this.hasSufficientBalance(fundingAmount);
@@ -130,7 +130,7 @@ export class FundingService {
   /**
    * Fund a wallet with WCO tokens
    */
-  static async fundWallet(walletAddress: string, amount: string = "0.01"): Promise<FundingResult> {
+  static async fundWallet(walletAddress: string, amount: string = "0.25"): Promise<FundingResult> {
     try {
       // Check if server has sufficient balance
       const hasBalance = await this.hasSufficientBalance(amount);
@@ -199,13 +199,13 @@ export class FundingService {
    * Get minimum funding amount
    */
   static getMinimumFundingAmount(): string {
-    return "0.01"; // 0.01 WCO
+    return "0.25"; // 0.25 WCO
   }
 
   /**
    * Get recommended funding amount
    */
   static getRecommendedFundingAmount(): string {
-    return "0.1"; // 0.1 WCO
+    return "0.25"; // 0.25 WCO
   }
 }
