@@ -88,27 +88,33 @@ export const deploySmartContractWallet = async (name: string, privateKey: string
         account: account.address,
       });
       console.log(`Gas estimated via RPC: ${estimatedGas}`);
+      
+      // If RPC estimation is very high, cap it to prevent excessive costs
+      const maxReasonableGas = 150000n; // Cap at 150k gas
+      if (estimatedGas > maxReasonableGas) {
+        console.warn(`RPC gas estimate (${estimatedGas}) is very high, capping at ${maxReasonableGas}`);
+        estimatedGas = maxReasonableGas;
+      }
     } catch (error) {
       // Fallback to a reasonable estimate if RPC estimation fails
       console.warn('RPC gas estimation failed, using fallback estimate:', error);
       
-      // For a simple proxy deployment + initialization, this should be sufficient
-      // But we're seeing high gas usage, so let's be more generous
+      // Optimized gas estimates based on actual usage
       // Base transaction: 21,000
-      // Contract creation: ~100,000 (increased from 32,000)
-      // String storage: ~5,000 per character (increased from 2,000)
-      // Initialize function call: ~50,000 (increased from 15,000)
+      // Contract creation: ~60,000 (reduced from 100,000, still safe)
+      // String storage: ~3,000 per character (reduced from 5,000)
+      // Initialize function call: ~30,000 (reduced from 50,000)
       const baseGas = 21000n; // Base transaction cost
-      const contractCreationGas = 100000n; // Proxy creation with buffer
-      const stringStorageGas = BigInt(name.length) * 5000n; // String storage cost with buffer
-      const initializationGas = 50000n; // Initialize function call with buffer
+      const contractCreationGas = 60000n; // Proxy creation (optimized)
+      const stringStorageGas = BigInt(name.length) * 3000n; // String storage cost (optimized)
+      const initializationGas = 30000n; // Initialize function call (optimized)
       
       estimatedGas = baseGas + contractCreationGas + stringStorageGas + initializationGas;
       console.log(`Using fallback gas estimate: ${estimatedGas} (base: ${baseGas}, creation: ${contractCreationGas}, string: ${stringStorageGas}, init: ${initializationGas})`);
     }
 
-    // Add 20% buffer to gas estimate for safety
-    const gasWithBuffer = (estimatedGas * 120n) / 100n;
+    // Add 15% buffer to gas estimate for safety (reduced from 20%)
+    const gasWithBuffer = (estimatedGas * 115n) / 100n;
     
     console.log(`Gas estimation: ${estimatedGas} (with buffer: ${gasWithBuffer})`);
     
