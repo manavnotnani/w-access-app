@@ -1,7 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Mail, Twitter, Github } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const CTA = () => {
+  const navigate = useNavigate();
+
+  const handleCreateWallet = () => {
+    navigate('/create-wallet');
+  };
+
   return (
     <section className="py-24 bg-gradient-to-br from-dark-surface via-background to-dark-surface relative overflow-hidden">
       {/* Background Effects */}
@@ -13,18 +20,19 @@ const CTA = () => {
           {/* Main CTA */}
           <div className="mb-16">
             <h2 className="text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-              Ready to <span className="bg-gradient-hero bg-clip-text text-transparent">Simplify Web3</span>?
+              Ready to <span className="bg-gradient-hero bg-clip-text text-transparent">Enter Web3</span>?
             </h2>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Join the waitlist for W-Access and be among the first to experience frictionless Web3 onboarding.
+              Create your first wallet now and join the W-Access ecosystem. Experience frictionless Web3 onboarding today.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Button 
                 size="lg" 
                 className="bg-gradient-hero text-primary-foreground hover:shadow-glow transition-all duration-300 animate-glow-pulse px-8 py-4 text-lg font-semibold"
+                onClick={handleCreateWallet}
               >
-                Join Waitlist
+                Create Your First Wallet
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
               <Button 
@@ -36,25 +44,25 @@ const CTA = () => {
               </Button>
             </div>
 
-            {/* Early Access Benefits */}
+            {/* Wallet Creation Benefits */}
             <div className="bg-gradient-card border border-gold/20 rounded-2xl p-6 max-w-2xl mx-auto shadow-card">
-              <h3 className="text-lg font-semibold mb-4 text-gold">Early Access Benefits</h3>
+              <h3 className="text-lg font-semibold mb-4 text-gold">What You Get</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-gold rounded-full"></div>
-                  <span>Priority wallet creation</span>
+                  <span>Secure wallet creation</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-blue-accent rounded-full"></div>
-                  <span>Exclusive features</span>
+                  <span>Easy recovery options</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-gold rounded-full"></div>
-                  <span>Community access</span>
+                  <span>Multi-chain support</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-blue-accent rounded-full"></div>
-                  <span>Direct team support</span>
+                  <span>24/7 ecosystem access</span>
                 </div>
               </div>
             </div>
