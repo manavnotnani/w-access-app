@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { useMemo } from "react";
 import { CheckCircle, Loader2 } from "lucide-react";
 
 interface VerificationStepProps {
@@ -38,6 +39,8 @@ export const VerificationStep = ({
     }
   };
 
+  // Generate a randomized set of options for a given correct word.
+  // This will be called inside a memoized block so the positions remain stable per render lifecycle.
   const getRandomWords = (correctWord: string) => {
     // Common BIP39 words for better verification
     const commonWords = [
@@ -56,6 +59,17 @@ export const VerificationStep = ({
     return allOptions.sort(() => 0.5 - Math.random());
   };
 
+  // Memoize the options for each verification word so they don't reshuffle after each click/re-render
+  const optionsByWordIndex = useMemo(() => {
+    const mapping: Record<number, string[]> = {};
+    verificationWords.forEach((idx) => {
+      const correctWord = seedPhrase[idx];
+      mapping[idx] = getRandomWords(correctWord);
+    });
+    return mapping;
+    // Stringify deps to ensure stable memoization across shallow array identity changes
+  }, [seedPhrase.join(" "), verificationWords.join(",")]);
+
   return (
     <div className="space-y-6">
       <div className="text-center space-y-4">
@@ -69,7 +83,7 @@ export const VerificationStep = ({
       <div className="space-y-4">
         {verificationWords.map((wordIndex) => {
           const correctWord = seedPhrase[wordIndex];
-          const options = getRandomWords(correctWord);
+          const options = optionsByWordIndex[wordIndex] || [];
           const isConfirmed = confirmedWords.includes(wordIndex);
           
           return (
