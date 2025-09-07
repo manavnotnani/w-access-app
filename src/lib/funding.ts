@@ -103,12 +103,14 @@ export class FundingService {
       const serverBalance = await this.getServerBalance();
       const hasBalance = await this.hasSufficientBalance(fundingAmount);
       
-      // Check if wallet already has funds
+      // Check if wallet already has sufficient funds
       const walletBalance = await this.publicClient.getBalance({
         address: walletAddress as `0x${string}`,
       });
       
-      const isFunded = walletBalance > 0n;
+      // Check if wallet has sufficient balance for the required funding amount
+      const requiredAmount = parseEther(fundingAmount);
+      const isFunded = walletBalance >= requiredAmount;
       
       return {
         isFunded,
@@ -128,18 +130,35 @@ export class FundingService {
   }
 
   /**
+   * Check if wallet is already funded with sufficient amount
+   */
+  static async isWalletFunded(walletAddress: string, requiredAmount: string): Promise<boolean> {
+    try {
+      const walletBalance = await this.publicClient.getBalance({
+        address: walletAddress as `0x${string}`,
+      });
+      
+      const requiredAmountInWei = parseEther(requiredAmount);
+      return walletBalance >= requiredAmountInWei;
+    } catch (error) {
+      console.error("Error checking wallet funding status:", error);
+      return false;
+    }
+  }
+
+  /**
    * Fund a wallet with WCO tokens
    */
   static async fundWallet(walletAddress: string, amount: string = "0.32"): Promise<FundingResult> {
     try {
       // Check if server has sufficient balance
       const hasBalance = await this.hasSufficientBalance(amount);
-      if (!hasBalance) {
-        return {
-          success: false,
-          error: "Server account has insufficient balance for funding"
-        };
-      }
+    //   if (!hasBalance) {
+    //     return {
+    //       success: false,
+    //       error: "Server account has insufficient balance for funding"
+    //     };
+    //   }
 
       // Get nonce for the transaction
       const nonce = await this.publicClient.getTransactionCount({
@@ -195,6 +214,19 @@ export class FundingService {
     try {
       // Add a small buffer (10%) to the gas cost for safety
       const fundingAmount = (parseFloat(gasCostInWCO) * 1.1).toFixed(6);
+      
+      console.log(`Checking if wallet ${walletAddress} needs funding for gas cost ${gasCostInWCO} WCO`);
+      
+      // Check if wallet is already funded with sufficient amount
+      const isAlreadyFunded = await this.isWalletFunded(walletAddress, fundingAmount);
+      
+      if (isAlreadyFunded) {
+        console.log(`Wallet ${walletAddress} is already funded with sufficient amount (${fundingAmount} WCO)`);
+        return {
+          success: true,
+          transactionHash: "already_funded" // Special identifier for already funded wallets
+        };
+      }
       
       console.log(`Funding wallet ${walletAddress} with ${fundingAmount} WCO for gas cost ${gasCostInWCO} WCO`);
       

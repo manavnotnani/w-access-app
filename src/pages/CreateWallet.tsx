@@ -175,7 +175,7 @@ const CreateWallet = () => {
           description: `Estimated gas cost: ${currentGasEstimate.gasCostInWCO} WCO`,
         });
 
-        // Step 2: Fund the wallet with the exact gas amount needed
+        // Step 2: Fund the wallet with the exact gas amount needed (if not already funded)
         setIsFunding(true);
         const fundingResult = await FundingService.fundWalletForGas(walletKeys.address, currentGasEstimate.gasCostInWCO);
         
@@ -183,10 +183,18 @@ const CreateWallet = () => {
           throw new Error(`Failed to fund wallet: ${fundingResult.error}`);
         }
 
-        toast({
-          title: "Wallet Funded",
-          description: `Wallet funded with ${(parseFloat(currentGasEstimate.gasCostInWCO) * 1.1).toFixed(6)} WCO for gas fees`,
-        });
+        // Show appropriate message based on funding result
+        if (fundingResult.transactionHash === "already_funded") {
+          toast({
+            title: "Wallet Already Funded",
+            description: `Wallet already has sufficient funds (${(parseFloat(currentGasEstimate.gasCostInWCO) * 1.1).toFixed(6)} WCO) for gas fees`,
+          });
+        } else {
+          toast({
+            title: "Wallet Funded",
+            description: `Wallet funded with ${(parseFloat(currentGasEstimate.gasCostInWCO) * 1.1).toFixed(6)} WCO for gas fees`,
+          });
+        }
 
         setIsFunding(false);
 
