@@ -22,6 +22,7 @@ const CreateWallet = () => {
   const [walletName, setWalletName] = useState("");
   const [showSeedPhrase, setShowSeedPhrase] = useState(false);
   const [confirmedWords, setConfirmedWords] = useState<number[]>([]);
+  const [verificationWords, setVerificationWords] = useState<number[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [walletKeys, setWalletKeys] = useState<WalletKeys | null>(null);
   const [keyGenerationError, setKeyGenerationError] = useState<string | null>(null);
@@ -30,6 +31,31 @@ const CreateWallet = () => {
   const [isFunding, setIsFunding] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Use generated seed phrase instead of hardcoded one
+  const seedPhrase = walletKeys?.seedPhrase || [];
+
+  // Generate random word positions for verification (3 random positions from 12 words)
+  const generateRandomVerificationWords = () => {
+    const allIndices = Array.from({ length: 12 }, (_, i) => i);
+    const shuffled = allIndices.sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 3).sort((a, b) => a - b); // Sort to maintain order
+  };
+
+  // Generate random verification words when seed phrase is available
+  useEffect(() => {
+    if (seedPhrase.length === 12 && verificationWords.length === 0) {
+      setVerificationWords(generateRandomVerificationWords());
+    }
+  }, [seedPhrase]);
+
+  // Reset verification words when entering verification step (step 4)
+  useEffect(() => {
+    if (step === 4 && seedPhrase.length === 12) {
+      setVerificationWords(generateRandomVerificationWords());
+      setConfirmedWords([]); // Also reset confirmed words
+    }
+  }, [step, seedPhrase]);
 
   // Estimate gas when we reach step 5 if not already estimated
   useEffect(() => {
@@ -50,10 +76,6 @@ const CreateWallet = () => {
       estimateGas();
     }
   }, [step, walletKeys, walletName, gasEstimate, isEstimatingGas]);
-
-  // Use generated seed phrase instead of hardcoded one
-  const seedPhrase = walletKeys?.seedPhrase || [];
-  const verificationWords = [3, 7, 11]; // indices to verify
 
   const steps = [
     { id: 1, title: "Choose Name", description: "Pick a human-readable name" },

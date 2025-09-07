@@ -170,10 +170,10 @@ export const CompleteStep = ({ walletName, walletAddress, gasEstimate, isEstimat
               <Badge variant="secondary">✓ Backed Up</Badge>
               <Badge variant="secondary">✓ Ready</Badge>
               {fundingStatus?.isFunded && (
-                <Badge variant="secondary" className="bg-green-100 text-green-800">✓ Funded</Badge>
+                <Badge variant="secondary">✓ Funded</Badge>
               )}
               {gasEstimate && (
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                <Badge variant="secondary">
                   <Zap className="w-3 h-3 mr-1" />
                   Gas: {gasEstimate.gasCostInWCO} WCO
                 </Badge>
