@@ -233,6 +233,7 @@ const Dashboard = () => {
                       variant="outline"
                       size="sm"
                       className="flex-1"
+                      onClick={() => window.open(`https://scan-testnet.w-chain.com/address/${wallet.address}`, '_blank')}
                     >
                       <ExternalLink className="w-4 h-4 mr-2" />
                       View
