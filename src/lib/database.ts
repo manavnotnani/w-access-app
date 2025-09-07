@@ -168,6 +168,40 @@ export const walletService = {
     return !!data
   },
 
+  // Find wallets which have a verified recovery email matching the supplied email
+  async getWalletsByRecoveryEmail(email: string): Promise<Pick<Wallet, 'id' | 'name' | 'address' | 'created_at'>[]> {
+    // Join via RPC-like select to fetch referenced wallet rows
+    const { data, error } = await supabase
+      .from('recovery_methods')
+      .select('wallets:wallet_id ( id, name, address, created_at )')
+      .eq('type', 'email')
+      .eq('value', email)
+      .eq('is_verified', true)
+
+    if (error) {
+      console.error('Error fetching wallets by recovery email:', error)
+      return []
+    }
+
+    const wallets = (data || []).map((row: any) => row.wallets).filter(Boolean)
+    return wallets
+  },
+
+  // Re-associate given wallets to current session (so they appear in this browser)
+  async rebindWalletsToCurrentSession(walletIds: string[]): Promise<boolean> {
+    if (!walletIds || walletIds.length === 0) return true
+    const sessionId = walletSession.getSessionId()
+    const { error } = await supabase
+      .from('wallets')
+      .update({ session_id: sessionId })
+      .in('id', walletIds)
+    if (error) {
+      console.error('Error rebinding wallets to session:', error)
+      return false
+    }
+    return true
+  },
+
   // Update wallet
   async updateWallet(walletId: string, updates: Partial<Wallet>): Promise<Wallet | null> {
     const { data, error } = await supabase

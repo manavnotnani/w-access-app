@@ -10,6 +10,8 @@ import { Shield, Key, AlertTriangle, CheckCircle, RefreshCw, Download, Upload, L
 import { CryptoService, WalletKeys } from "@/lib/crypto";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { walletService } from "@/lib/database";
+import { validateEmail } from "@/lib/utils";
 
 const Recovery = () => {
   const [seedPhrase, setSeedPhrase] = useState(Array(12).fill(""));
@@ -19,6 +21,13 @@ const Recovery = () => {
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Email recovery state
+  const [email, setEmail] = useState("");
+  const [emailCode, setEmailCode] = useState("");
+  const [emailSentCode, setEmailSentCode] = useState<string | null>(null);
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailRecovering, setEmailRecovering] = useState(false);
 
   const handleSeedPhraseChange = (index: number, value: string) => {
     const newSeedPhrase = [...seedPhrase];
@@ -73,6 +82,42 @@ const Recovery = () => {
     
     // Check if all words are filled
     return seedPhrase.every(word => word.trim() !== '');
+  };
+
+  const sendEmailCode = async () => {
+    if (!validateEmail(email)) {
+      toast({ title: "Invalid email", variant: "destructive" });
+      return;
+    }
+    setEmailSending(true);
+    try {
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      setEmailSentCode(code);
+      console.log(`Wallet recovery code for ${email}: ${code}`);
+      toast({ title: "Verification code sent", description: "Check your email (dev: console)." });
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
+  const verifyEmailAndRecover = async () => {
+    if (!emailSentCode || emailCode.trim() !== emailSentCode) {
+      toast({ title: "Invalid code", description: "Please enter the 6-digit code.", variant: "destructive" });
+      return;
+    }
+    setEmailRecovering(true);
+    try {
+      const wallets = await walletService.getWalletsByRecoveryEmail(email);
+      const ok = await walletService.rebindWalletsToCurrentSession(wallets.map((w: any) => w.id));
+      if (!ok) throw new Error('Failed to rebind wallets');
+      toast({ title: "Wallets recovered", description: `Recovered ${wallets.length} wallet(s).` });
+      navigate('/dashboard');
+    } catch (e) {
+      console.error(e);
+      toast({ title: "Recovery failed", variant: "destructive" });
+    } finally {
+      setEmailRecovering(false);
+    }
   };
 
   const backupMethods = [
@@ -222,7 +267,7 @@ const Recovery = () => {
                 <CardDescription>Choose how you want to recover your wallet</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <Button
                     variant={recoveryMethod === "seed" ? "default" : "outline"}
                     onClick={() => setRecoveryMethod("seed")}
@@ -246,6 +291,14 @@ const Recovery = () => {
                   >
                     <Shield className="w-6 h-6" />
                     <span>Social Recovery</span>
+                  </Button>
+                  <Button
+                    variant={recoveryMethod === "email" ? "default" : "outline"}
+                    onClick={() => setRecoveryMethod("email")}
+                    className="h-auto p-4 flex flex-col items-center gap-2"
+                  >
+                    <Shield className="w-6 h-6" />
+                    <span>Email</span>
                   </Button>
                 </div>
 
@@ -314,6 +367,46 @@ const Recovery = () => {
                     <Button className="bg-gradient-primary hover:opacity-90">
                       Start Cloud Recovery
                     </Button>
+                  </div>
+                )}
+
+                {recoveryMethod === "email" && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="recover-email">Your verified recovery email</Label>
+                      <div className="flex gap-2 mt-1">
+                        <Input
+                          id="recover-email"
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="you@example.com"
+                        />
+                        <Button onClick={sendEmailCode} disabled={!validateEmail(email) || emailSending}>
+                          {emailSending ? 'Sending…' : 'Send Code'}
+                        </Button>
+                      </div>
+                    </div>
+                    {emailSentCode && (
+                      <div>
+                        <Label htmlFor="recover-code">Enter 6-digit code</Label>
+                        <div className="flex gap-2 mt-1">
+                          <Input
+                            id="recover-code"
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={6}
+                            value={emailCode}
+                            onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, ''))}
+                            placeholder="123456"
+                          />
+                          <Button variant="outline" onClick={verifyEmailAndRecover} disabled={emailRecovering}>
+                            {emailRecovering ? 'Recovering…' : 'Verify & Recover'}
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">For demo, the code is logged to console.</p>
+                      </div>
+                    )}
                   </div>
                 )}
 

@@ -8,12 +8,83 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
 import { Shield, Key, Smartphone, Mail, CheckCircle, ArrowRight, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { validateEmail } from "@/lib/utils";
+import { walletService, recoveryService, settingsService } from "@/lib/database";
+import { useToast } from "@/hooks/use-toast";
 
 const SecuritySetup = () => {
   const [recoveryEmail, setRecoveryEmail] = useState("");
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [setupComplete, setSetupComplete] = useState(false);
+  const isEmailValid = validateEmail(recoveryEmail);
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [sentCode, setSentCode] = useState<string | null>(null);
+  const [methodId, setMethodId] = useState<string | null>(null);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const { toast } = useToast();
+
+  const getCurrentWalletId = async (): Promise<string | null> => {
+    const wallets = await walletService.getWalletsBySession();
+    if (!wallets || wallets.length === 0) return null;
+    // Use most recently created wallet in this session
+    return wallets[0].id;
+  };
+
+  const handleSendCode = async () => {
+    if (!isEmailValid) return;
+    setIsSendingCode(true);
+    try {
+      const walletId = await getCurrentWalletId();
+      if (!walletId) {
+        toast({ title: "No wallet found", description: "Create a wallet first.", variant: "destructive" });
+        return;
+      }
+
+      // Create recovery method record (unverified)
+      const method = await recoveryService.addRecoveryMethod({
+        wallet_id: walletId,
+        type: 'email',
+        value: recoveryEmail,
+        is_verified: false
+      } as any);
+
+      if (!method) {
+        toast({ title: "Error", description: "Failed to create recovery record.", variant: "destructive" });
+        return;
+      }
+      setMethodId(method.id);
+
+      // Generate a 6-digit code (demo)
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      setSentCode(code);
+
+      // In a real app, send via email provider; for demo log it
+      console.log(`Recovery verification code for ${recoveryEmail}: ${code}`);
+      toast({ title: "Verification code sent", description: "Check console for demo code." });
+    } catch (e) {
+      console.error(e);
+      toast({ title: "Error", description: "Could not send verification code.", variant: "destructive" });
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!methodId || !sentCode) return;
+    if (verificationCode.trim() !== sentCode) {
+      toast({ title: "Invalid code", description: "Please enter the 6-digit code.", variant: "destructive" });
+      return;
+    }
+    const ok = await recoveryService.verifyRecoveryMethod(methodId);
+    if (ok) {
+      setIsEmailVerified(true);
+      toast({ title: "Email verified", description: "Recovery email added." });
+    } else {
+      toast({ title: "Error", description: "Failed to verify email.", variant: "destructive" });
+    }
+  };
   const navigate = useNavigate();
 
   const securityFeatures = [
@@ -43,11 +114,26 @@ const SecuritySetup = () => {
     }
   ];
 
-  const handleComplete = () => {
-    setSetupComplete(true);
-    setTimeout(() => {
-      navigate("/wallet-tutorial");
-    }, 2000);
+  const handleComplete = async () => {
+    try {
+      const walletId = await getCurrentWalletId();
+      if (walletId) {
+        // Persist settings
+        await settingsService.upsertWalletSettings({
+          wallet_id: walletId,
+          theme: 'system',
+          notifications_enabled: true,
+          security_level: twoFactorEnabled || biometricEnabled || isEmailVerified ? 'advanced' : 'basic'
+        } as any);
+      }
+    } catch (e) {
+      console.error('Failed saving settings', e);
+    } finally {
+      setSetupComplete(true);
+      setTimeout(() => {
+        navigate("/wallet-tutorial");
+      }, 2000);
+    }
   };
 
   if (setupComplete) {
@@ -101,8 +187,8 @@ const SecuritySetup = () => {
                     <CardDescription>Add an email for account recovery assistance</CardDescription>
                   </div>
                 </div>
-                <Badge variant={recoveryEmail ? "default" : "outline"}>
-                  {recoveryEmail ? "Complete" : "Required"}
+                <Badge variant={isEmailVerified ? "default" : "outline"}>
+                  {isEmailVerified ? "Verified" : "Required"}
                 </Badge>
               </div>
             </CardHeader>
@@ -117,7 +203,33 @@ const SecuritySetup = () => {
                     onChange={(e) => setRecoveryEmail(e.target.value)}
                     placeholder="your@email.com"
                   />
+                  {!isEmailValid && recoveryEmail && (
+                    <p className="mt-2 text-sm text-red-500">Enter a valid email address.</p>
+                  )}
+                  <div className="mt-3 flex gap-2">
+                    <Button size="sm" onClick={handleSendCode} disabled={!isEmailValid || isSendingCode || isEmailVerified}>
+                      {isSendingCode ? 'Sending…' : (isEmailVerified ? 'Verified' : 'Send Code')}
+                    </Button>
+                  </div>
                 </div>
+                {sentCode && !isEmailVerified && (
+                  <div>
+                    <Label htmlFor="verification-code">Enter 6-digit Code</Label>
+                    <div className="flex gap-2 mt-1">
+                      <Input
+                        id="verification-code"
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={6}
+                        value={verificationCode}
+                        onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                        placeholder="123456"
+                      />
+                      <Button variant="outline" onClick={handleVerifyCode}>Verify</Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">For demo, the code is logged to console.</p>
+                  </div>
+                )}
                 <Alert>
                   <Shield className="h-4 w-4" />
                   <AlertDescription>
@@ -191,7 +303,7 @@ const SecuritySetup = () => {
         <div className="flex flex-col gap-4">
           <Button
             onClick={handleComplete}
-            disabled={!recoveryEmail}
+            disabled={!isEmailVerified}
             className="w-full bg-gradient-primary hover:opacity-90"
             size="lg"
           >
