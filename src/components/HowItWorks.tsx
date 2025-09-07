@@ -98,8 +98,9 @@ const HowItWorks = () => {
                   <span className="text-muted-foreground">Your wallet:</span>
                   <span className="bg-gradient-hero bg-clip-text text-transparent font-bold">alice.w-access</span>
                 </div>
-                <div className="text-sm text-muted-foreground mt-2">
-                  Instead of: 0x742d35cc6b19c6b6d5f5b9ff5c5f5d5f5d5f5d5f
+                <div className="text-sm text-muted-foreground mt-2 text-center">
+                  <span className="hidden sm:inline">Instead of: 0x742d35cc6b19c6b6d5f5b9ff5c5f5d5f5d5f5d5f</span>
+                  <span className="sm:hidden">Instead of: 0x742d...5d5f</span>
                 </div>
               </div>
 
