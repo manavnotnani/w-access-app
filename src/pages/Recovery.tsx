@@ -6,16 +6,119 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Key, AlertTriangle, CheckCircle, RefreshCw, Download, Upload } from "lucide-react";
+import { Shield, Key, AlertTriangle, CheckCircle, RefreshCw, Download, Upload, Loader2 } from "lucide-react";
+import { CryptoService, WalletKeys } from "@/lib/crypto";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { walletService } from "@/lib/database";
+import { validateEmail } from "@/lib/utils";
+import { sendOtpEmail } from "@/lib/email";
 
 const Recovery = () => {
   const [seedPhrase, setSeedPhrase] = useState(Array(12).fill(""));
   const [recoveryMethod, setRecoveryMethod] = useState<string>("");
+  const [isRecovering, setIsRecovering] = useState(false);
+  const [recoveredWallet, setRecoveredWallet] = useState<WalletKeys | null>(null);
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // Email recovery state
+  const [email, setEmail] = useState("");
+  const [emailCode, setEmailCode] = useState("");
+  const [emailSentCode, setEmailSentCode] = useState<string | null>(null);
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailRecovering, setEmailRecovering] = useState(false);
 
   const handleSeedPhraseChange = (index: number, value: string) => {
     const newSeedPhrase = [...seedPhrase];
-    newSeedPhrase[index] = value;
+    newSeedPhrase[index] = value.toLowerCase().trim();
     setSeedPhrase(newSeedPhrase);
+    setRecoveryError(null); // Clear error when user types
+  };
+
+  const handleRecoverWallet = async () => {
+    const mnemonic = seedPhrase.join(' ').trim();
+    
+    if (mnemonic.split(' ').length !== 12) {
+      setRecoveryError("Please enter all 12 words");
+      return;
+    }
+
+    setIsRecovering(true);
+    setRecoveryError(null);
+
+    try {
+      const wallet = await CryptoService.recoverWallet(mnemonic);
+      setRecoveredWallet(wallet);
+      
+      toast({
+        title: "Wallet Recovered!",
+        description: `Successfully recovered wallet: ${wallet.address.slice(0, 8)}...${wallet.address.slice(-6)}`,
+      });
+
+      // Navigate to dashboard or wallet view
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 2000);
+
+    } catch (error) {
+      console.error('Recovery error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to recover wallet';
+      setRecoveryError(errorMessage);
+      
+      toast({
+        title: "Recovery Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsRecovering(false);
+    }
+  };
+
+  const validateSeedPhrase = () => {
+    const mnemonic = seedPhrase.join(' ').trim();
+    if (mnemonic.split(' ').length !== 12) return false;
+    
+    // Check if all words are filled
+    return seedPhrase.every(word => word.trim() !== '');
+  };
+
+  const sendEmailCode = async () => {
+    if (!validateEmail(email)) {
+      toast({ title: "Invalid email", variant: "destructive" });
+      return;
+    }
+    setEmailSending(true);
+    try {
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      setEmailSentCode(code);
+      await sendOtpEmail({ to: email, code, subject: "Your recovery code" });
+      toast({ title: "Verification code sent", description: "Check your email for the code." });
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
+  const verifyEmailAndRecover = async () => {
+    if (!emailSentCode || emailCode.trim() !== emailSentCode) {
+      toast({ title: "Invalid code", description: "Please enter the 6-digit code.", variant: "destructive" });
+      return;
+    }
+    setEmailRecovering(true);
+    try {
+      const wallets = await walletService.getWalletsByRecoveryEmail(email);
+      const ok = await walletService.rebindWalletsToCurrentSession(wallets.map((w: any) => w.id));
+      if (!ok) throw new Error('Failed to rebind wallets');
+      toast({ title: "Wallets recovered", description: `Recovered ${wallets.length} wallet(s).` });
+      navigate('/dashboard');
+    } catch (e) {
+      console.error(e);
+      toast({ title: "Recovery failed", variant: "destructive" });
+    } finally {
+      setEmailRecovering(false);
+    }
   };
 
   const backupMethods = [
@@ -165,7 +268,7 @@ const Recovery = () => {
                 <CardDescription>Choose how you want to recover your wallet</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <Button
                     variant={recoveryMethod === "seed" ? "default" : "outline"}
                     onClick={() => setRecoveryMethod("seed")}
@@ -190,6 +293,14 @@ const Recovery = () => {
                     <Shield className="w-6 h-6" />
                     <span>Social Recovery</span>
                   </Button>
+                  <Button
+                    variant={recoveryMethod === "email" ? "default" : "outline"}
+                    onClick={() => setRecoveryMethod("email")}
+                    className="h-auto p-4 flex flex-col items-center gap-2"
+                  >
+                    <Shield className="w-6 h-6" />
+                    <span>Email</span>
+                  </Button>
                 </div>
 
                 {recoveryMethod === "seed" && (
@@ -204,12 +315,43 @@ const Recovery = () => {
                             onChange={(e) => handleSeedPhraseChange(index, e.target.value)}
                             placeholder="word"
                             className="text-center font-mono"
+                            disabled={isRecovering}
                           />
                         </div>
                       ))}
                     </div>
-                    <Button className="w-full bg-gradient-primary hover:opacity-90">
-                      Recover Wallet
+                    
+                    {recoveryError && (
+                      <Alert variant="destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription>{recoveryError}</AlertDescription>
+                      </Alert>
+                    )}
+
+                    {recoveredWallet && (
+                      <Alert className="border-green-200 bg-green-50">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <AlertDescription className="text-green-800">
+                          <strong>Wallet recovered successfully!</strong><br />
+                          Address: {recoveredWallet.address}<br />
+                          Redirecting to dashboard...
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    <Button 
+                      className="w-full bg-gradient-primary hover:opacity-90"
+                      onClick={handleRecoverWallet}
+                      disabled={!validateSeedPhrase() || isRecovering}
+                    >
+                      {isRecovering ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Recovering Wallet...
+                        </>
+                      ) : (
+                        'Recover Wallet'
+                      )}
                     </Button>
                   </div>
                 )}
@@ -226,6 +368,46 @@ const Recovery = () => {
                     <Button className="bg-gradient-primary hover:opacity-90">
                       Start Cloud Recovery
                     </Button>
+                  </div>
+                )}
+
+                {recoveryMethod === "email" && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="recover-email">Your verified recovery email</Label>
+                      <div className="flex gap-2 mt-1">
+                        <Input
+                          id="recover-email"
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="you@example.com"
+                        />
+                        <Button onClick={sendEmailCode} disabled={!validateEmail(email) || emailSending}>
+                          {emailSending ? 'Sending…' : 'Send Code'}
+                        </Button>
+                      </div>
+                    </div>
+                    {emailSentCode && (
+                      <div>
+                        <Label htmlFor="recover-code">Enter 6-digit code</Label>
+                        <div className="flex gap-2 mt-1">
+                          <Input
+                            id="recover-code"
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={6}
+                            value={emailCode}
+                            onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, ''))}
+                            placeholder="123456"
+                          />
+                          <Button variant="outline" onClick={verifyEmailAndRecover} disabled={emailRecovering}>
+                            {emailRecovering ? 'Recovering…' : 'Verify & Recover'}
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">For demo, the code is logged to console.</p>
+                      </div>
+                    )}
                   </div>
                 )}
 
