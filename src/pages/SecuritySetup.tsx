@@ -73,7 +73,7 @@ const SecuritySetup = () => {
   const handleVerifyCode = async () => {
     if (!methodId || !sentCode) return;
     if (verificationCode.trim() !== sentCode) {
-      toast({ title: "Invalid code", description: "Please enter the 6-digit code.", variant: "destructive" });
+      toast({ title: "Invalid code", description: "Please enter valid 6-digit code.", variant: "destructive" });
       return;
     }
     const ok = await recoveryService.verifyRecoveryMethod(methodId);
@@ -92,7 +92,7 @@ const SecuritySetup = () => {
       title: "Recovery Email",
       description: "Add an email for account recovery assistance",
       icon: Mail,
-      status: recoveryEmail ? "complete" : "pending",
+      status: isEmailVerified ? "complete" : "pending",
       required: true
     },
     {
@@ -100,7 +100,7 @@ const SecuritySetup = () => {
       title: "Two-Factor Authentication",
       description: "Extra security layer using your phone",
       icon: Smartphone,
-      status: twoFactorEnabled ? "complete" : "optional",
+      status: "coming-soon",
       required: false
     },
     {
@@ -108,7 +108,7 @@ const SecuritySetup = () => {
       title: "Biometric Lock",
       description: "Use fingerprint or face ID to access wallet",
       icon: Key,
-      status: biometricEnabled ? "complete" : "optional",
+      status: "coming-soon",
       required: false
     }
   ];
@@ -122,7 +122,7 @@ const SecuritySetup = () => {
           wallet_id: walletId,
           theme: 'system',
           notifications_enabled: true,
-          security_level: twoFactorEnabled || biometricEnabled || isEmailVerified ? 'advanced' : 'basic'
+          security_level: isEmailVerified ? 'basic' : 'minimal'
         } as any);
       }
     } catch (e) {
@@ -240,7 +240,7 @@ const SecuritySetup = () => {
           </Card>
 
           {/* Two-Factor Authentication */}
-          <Card className="border-primary/20">
+          <Card className="border-primary/20 opacity-75">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -250,26 +250,29 @@ const SecuritySetup = () => {
                     <CardDescription>Extra security layer using your phone</CardDescription>
                   </div>
                 </div>
-                <Switch
-                  checked={twoFactorEnabled}
-                  onCheckedChange={setTwoFactorEnabled}
-                />
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-xs">
+                    Implementing Soon
+                  </Badge>
+                  <Switch
+                    checked={false}
+                    disabled={true}
+                  />
+                </div>
               </div>
             </CardHeader>
-            {twoFactorEnabled && (
-              <CardContent>
-                <Alert>
-                  <Smartphone className="h-4 w-4" />
-                  <AlertDescription>
-                    Scan the QR code with your authenticator app to complete setup.
-                  </AlertDescription>
-                </Alert>
-              </CardContent>
-            )}
+            <CardContent>
+              <Alert>
+                <Smartphone className="h-4 w-4" />
+                <AlertDescription>
+                  This feature is currently under development and will be available in a future update.
+                </AlertDescription>
+              </Alert>
+            </CardContent>
           </Card>
 
           {/* Biometric Lock */}
-          <Card className="border-primary/20">
+          <Card className="border-primary/20 opacity-75">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -279,22 +282,25 @@ const SecuritySetup = () => {
                     <CardDescription>Use fingerprint or face ID to access wallet</CardDescription>
                   </div>
                 </div>
-                <Switch
-                  checked={biometricEnabled}
-                  onCheckedChange={setBiometricEnabled}
-                />
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-xs">
+                    Implementing Soon
+                  </Badge>
+                  <Switch
+                    checked={false}
+                    disabled={true}
+                  />
+                </div>
               </div>
             </CardHeader>
-            {biometricEnabled && (
-              <CardContent>
-                <Alert>
-                  <Lock className="h-4 w-4" />
-                  <AlertDescription>
-                    Biometric authentication will be required to access your wallet on this device.
-                  </AlertDescription>
-                </Alert>
-              </CardContent>
-            )}
+            <CardContent>
+              <Alert>
+                <Lock className="h-4 w-4" />
+                <AlertDescription>
+                  This feature is currently under development and will be available in a future update.
+                </AlertDescription>
+              </Alert>
+            </CardContent>
           </Card>
         </div>
 
@@ -321,19 +327,25 @@ const SecuritySetup = () => {
         {/* Security Summary */}
         <div className="mt-8 p-4 bg-gradient-subtle rounded-lg border border-primary/20">
           <h3 className="font-semibold mb-2">Security Level</h3>
-          <div className="flex gap-2 mb-2">
+          <div className="flex gap-2 mb-2 flex-wrap">
             {securityFeatures.map((feature) => (
               <Badge
                 key={feature.id}
-                variant={feature.status === "complete" ? "default" : "outline"}
+                variant={
+                  feature.status === "complete" 
+                    ? "default" 
+                    : feature.status === "coming-soon" 
+                    ? "secondary" 
+                    : "outline"
+                }
                 className="text-xs"
               >
-                {feature.title}
+                {feature.status === "coming-soon" ? `${feature.title} (Soon)` : feature.title}
               </Badge>
             ))}
           </div>
           <p className="text-sm text-muted-foreground">
-            {securityFeatures.filter(f => f.status === "complete").length} of {securityFeatures.length} security features enabled
+            {securityFeatures.filter(f => f.status === "complete").length} of {securityFeatures.filter(f => f.status !== "coming-soon").length} available security features enabled
           </p>
         </div>
       </div>

@@ -103,7 +103,7 @@ const Recovery = () => {
 
   const verifyEmailAndRecover = async () => {
     if (!emailSentCode || emailCode.trim() !== emailSentCode) {
-      toast({ title: "Invalid code", description: "Please enter the 6-digit code.", variant: "destructive" });
+      toast({ title: "Invalid code", description: "Please enter valid 6-digit code.", variant: "destructive" });
       return;
     }
     setEmailRecovering(true);

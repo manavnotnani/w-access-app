@@ -337,7 +337,9 @@ export const CompleteStep = ({ walletName, walletAddress, gasEstimate, isEstimat
           Your wallet has been created with military-grade security and stored securely in our database. 
           {walletAddress && (
             <span className="block mt-2 text-xs">
-              <strong>Wallet Address:</strong> {walletAddress}
+              <strong>Wallet Address:</strong> 
+              <span className="hidden sm:inline"> {walletAddress}</span>
+              <span className="sm:hidden"> {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
             </span>
           )}
         </AlertDescription>
