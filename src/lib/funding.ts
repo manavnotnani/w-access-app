@@ -78,7 +78,7 @@ export class FundingService {
   /**
    * Check if server has sufficient balance for funding
    */
-  static async hasSufficientBalance(fundingAmount: string = "0.25"): Promise<boolean> {
+  static async hasSufficientBalance(fundingAmount: string = "0.32"): Promise<boolean> {
     try {
       const balance = await this.getServerBalance();
       const balanceInWei = parseEther(balance);
@@ -98,7 +98,7 @@ export class FundingService {
   /**
    * Get funding status for a wallet
    */
-  static async getFundingStatus(walletAddress: string, fundingAmount: string = "0.25"): Promise<FundingStatus> {
+  static async getFundingStatus(walletAddress: string, fundingAmount: string = "0.32"): Promise<FundingStatus> {
     try {
       const serverBalance = await this.getServerBalance();
       const hasBalance = await this.hasSufficientBalance(fundingAmount);
@@ -130,7 +130,7 @@ export class FundingService {
   /**
    * Fund a wallet with WCO tokens
    */
-  static async fundWallet(walletAddress: string, amount: string = "0.25"): Promise<FundingResult> {
+  static async fundWallet(walletAddress: string, amount: string = "0.32"): Promise<FundingResult> {
     try {
       // Check if server has sufficient balance
       const hasBalance = await this.hasSufficientBalance(amount);
@@ -189,6 +189,26 @@ export class FundingService {
   }
 
   /**
+   * Fund a wallet with exact gas cost amount
+   */
+  static async fundWalletForGas(walletAddress: string, gasCostInWCO: string): Promise<FundingResult> {
+    try {
+      // Add a small buffer (10%) to the gas cost for safety
+      const fundingAmount = (parseFloat(gasCostInWCO) * 1.1).toFixed(6);
+      
+      console.log(`Funding wallet ${walletAddress} with ${fundingAmount} WCO for gas cost ${gasCostInWCO} WCO`);
+      
+      return await this.fundWallet(walletAddress, fundingAmount);
+    } catch (error) {
+      console.error("Error funding wallet for gas:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to fund wallet for gas"
+      };
+    }
+  }
+
+  /**
    * Get server account address
    */
   static getServerAddress(): string {
@@ -199,13 +219,13 @@ export class FundingService {
    * Get minimum funding amount
    */
   static getMinimumFundingAmount(): string {
-    return "0.25"; // 0.25 WCO
+    return "0.32"; // 0.32 WCO
   }
 
   /**
    * Get recommended funding amount
    */
   static getRecommendedFundingAmount(): string {
-    return "0.25"; // 0.25 WCO
+    return "0.32"; // 0.32 WCO
   }
 }

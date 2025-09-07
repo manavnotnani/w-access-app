@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,8 @@ import { CompleteStep } from "@/components/wallet/CompleteStep";
 import { walletService } from "@/lib/database";
 import { useToast } from "@/hooks/use-toast";
 import { WalletKeys, CryptoService } from "@/lib/crypto";
-import { deploySmartContractWallet } from "@/lib/utils";
+import { deploySmartContractWallet, estimateWalletCreationGas, GasEstimate } from "@/lib/utils";
+import { FundingService } from "@/lib/funding";
 
 
 const CreateWallet = () => {
@@ -24,8 +25,31 @@ const CreateWallet = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [walletKeys, setWalletKeys] = useState<WalletKeys | null>(null);
   const [keyGenerationError, setKeyGenerationError] = useState<string | null>(null);
+  const [gasEstimate, setGasEstimate] = useState<GasEstimate | null>(null);
+  const [isEstimatingGas, setIsEstimatingGas] = useState(false);
+  const [isFunding, setIsFunding] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Estimate gas when we reach step 5 if not already estimated
+  useEffect(() => {
+    if (step === 5 && walletKeys && walletName && !gasEstimate && !isEstimatingGas) {
+      console.log('CreateWallet - Step 5 reached, estimating gas...');
+      const estimateGas = async () => {
+        try {
+          setIsEstimatingGas(true);
+          const gasEstimate = await estimateWalletCreationGas(walletName, walletKeys.privateKey);
+          setGasEstimate(gasEstimate);
+          setIsEstimatingGas(false);
+          console.log('CreateWallet - Gas estimation complete in useEffect:', gasEstimate);
+        } catch (error) {
+          console.error('Error estimating gas in useEffect:', error);
+          setIsEstimatingGas(false);
+        }
+      };
+      estimateGas();
+    }
+  }, [step, walletKeys, walletName, gasEstimate, isEstimatingGas]);
 
   // Use generated seed phrase instead of hardcoded one
   const seedPhrase = walletKeys?.seedPhrase || [];
@@ -42,13 +66,64 @@ const CreateWallet = () => {
   const currentStep = steps.find(s => s.id === step);
   const progress = (step / steps.length) * 100;
 
-  const handleKeysGenerated = (keys: WalletKeys) => {
+  const handleKeysGenerated = async (keys: WalletKeys) => {
+    console.log('CreateWallet - handleKeysGenerated called with keys:', keys);
     setWalletKeys(keys);
     setKeyGenerationError(null);
+    
+    console.log('CreateWallet - handleKeysGenerated:', {
+      walletName,
+      hasWalletName: !!walletName,
+      keysGenerated: !!keys
+    });
+    
+    // Estimate gas as soon as keys are generated
+    if (walletName) {
+      try {
+        setIsEstimatingGas(true);
+        console.log('CreateWallet - Starting gas estimation...');
+        const gasEstimate = await estimateWalletCreationGas(walletName, keys.privateKey);
+        console.log('CreateWallet - Gas estimation complete:', gasEstimate);
+        setGasEstimate(gasEstimate);
+        setIsEstimatingGas(false);
+      } catch (error) {
+        console.error('Error estimating gas:', error);
+        setIsEstimatingGas(false);
+        // Don't throw error here, just log it - gas estimation will happen again during deployment
+      }
+    } else {
+      console.log('CreateWallet - No wallet name, skipping gas estimation');
+    }
   };
 
   const handleKeyGenerationError = (error: string) => {
     setKeyGenerationError(error);
+  };
+
+  // Re-estimate gas when wallet name changes (if keys are already generated)
+  const handleWalletNameChange = async (name: string) => {
+    setWalletName(name);
+    
+    console.log('CreateWallet - handleWalletNameChange:', {
+      name,
+      hasWalletKeys: !!walletKeys,
+      nameLength: name.length
+    });
+    
+    // Re-estimate gas if keys are already generated
+    if (walletKeys && name.length >= 3) {
+      try {
+        setIsEstimatingGas(true);
+        console.log('CreateWallet - Re-estimating gas for new name...');
+        const gasEstimate = await estimateWalletCreationGas(name, walletKeys.privateKey);
+        console.log('CreateWallet - Re-estimation complete:', gasEstimate);
+        setGasEstimate(gasEstimate);
+        setIsEstimatingGas(false);
+      } catch (error) {
+        console.error('Error re-estimating gas:', error);
+        setIsEstimatingGas(false);
+      }
+    }
   };
 
   const handleContinue = async () => {
@@ -60,7 +135,40 @@ const CreateWallet = () => {
           throw new Error("Wallet keys not generated");
         }
 
-        // Deploy the smart contract wallet first
+        // Step 1: Use existing gas estimate or estimate if not available
+        let currentGasEstimate = gasEstimate;
+        if (!currentGasEstimate) {
+          console.log('CreateWallet - No gas estimate found, estimating now...');
+          setIsEstimatingGas(true);
+          currentGasEstimate = await estimateWalletCreationGas(walletName, walletKeys.privateKey);
+          setGasEstimate(currentGasEstimate);
+          setIsEstimatingGas(false);
+          console.log('CreateWallet - Gas estimation complete:', currentGasEstimate);
+        } else {
+          console.log('CreateWallet - Using existing gas estimate:', currentGasEstimate);
+        }
+
+        toast({
+          title: "Gas Estimation Complete",
+          description: `Estimated gas cost: ${currentGasEstimate.gasCostInWCO} WCO`,
+        });
+
+        // Step 2: Fund the wallet with the exact gas amount needed
+        setIsFunding(true);
+        const fundingResult = await FundingService.fundWalletForGas(walletKeys.address, currentGasEstimate.gasCostInWCO);
+        
+        if (!fundingResult.success) {
+          throw new Error(`Failed to fund wallet: ${fundingResult.error}`);
+        }
+
+        toast({
+          title: "Wallet Funded",
+          description: `Wallet funded with ${(parseFloat(currentGasEstimate.gasCostInWCO) * 1.1).toFixed(6)} WCO for gas fees`,
+        });
+
+        setIsFunding(false);
+
+        // Step 3: Deploy the smart contract wallet
         const contractAddress = await deploySmartContractWallet(walletName, walletKeys.privateKey);
         
         // Validate the deployed contract address
@@ -105,6 +213,8 @@ const CreateWallet = () => {
         });
       } finally {
         setIsSaving(false);
+        setIsEstimatingGas(false);
+        setIsFunding(false);
       }
     } else {
       setStep(Math.min(5, step + 1));
@@ -117,7 +227,7 @@ const CreateWallet = () => {
         return (
           <WalletNameStep 
             walletName={walletName} 
-            setWalletName={setWalletName} 
+            setWalletName={handleWalletNameChange} 
           />
         );
       case 2:
@@ -145,7 +255,13 @@ const CreateWallet = () => {
           />
         );
       case 5:
-        return <CompleteStep walletName={walletName} walletAddress={walletKeys?.address} />;
+        console.log('CreateWallet - Rendering CompleteStep with:', {
+          walletName,
+          walletAddress: walletKeys?.address,
+          gasEstimate,
+          isEstimatingGas
+        });
+        return <CompleteStep walletName={walletName} walletAddress={walletKeys?.address} gasEstimate={gasEstimate} isEstimatingGas={isEstimatingGas} />;
       default:
         return null;
     }
@@ -212,10 +328,14 @@ const CreateWallet = () => {
           </Button>
           <Button
             onClick={handleContinue}
-            disabled={!canContinue() || isSaving}
+            disabled={!canContinue() || isSaving || isEstimatingGas || isFunding}
             className="bg-gradient-primary hover:opacity-90"
           >
-            {isSaving ? 'Creating Wallet...' : step === 5 ? 'Create Wallet' : 'Continue'}
+            {isSaving ? (
+              isEstimatingGas ? 'Estimating Gas...' : 
+              isFunding ? 'Funding Wallet...' : 
+              'Creating Wallet...'
+            ) : step === 5 ? 'Create Wallet' : 'Continue'}
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>

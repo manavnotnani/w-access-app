@@ -1,35 +1,64 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle, Shield, Copy, Wallet, AlertTriangle, Loader2 } from "lucide-react";
+import { CheckCircle, Shield, Copy, Wallet, AlertTriangle, Loader2, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { FundingService, FundingStatus } from "@/lib/funding";
 import { useToast } from "@/hooks/use-toast";
+import { GasEstimate } from "@/lib/utils";
 
 interface CompleteStepProps {
   walletName: string;
   walletAddress?: string;
+  gasEstimate?: GasEstimate | null;
+  isEstimatingGas?: boolean;
 }
 
-export const CompleteStep = ({ walletName, walletAddress }: CompleteStepProps) => {
+export const CompleteStep = ({ walletName, walletAddress, gasEstimate, isEstimatingGas }: CompleteStepProps) => {
   const [fundingStatus, setFundingStatus] = useState<FundingStatus | null>(null);
   const [isFunding, setIsFunding] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   const { toast } = useToast();
 
+  console.log('CompleteStep - Props received:', {
+    walletName,
+    walletAddress,
+    gasEstimate,
+    isEstimatingGas
+  });
+
   useEffect(() => {
     if (walletAddress) {
       checkFundingStatus();
     }
-  }, [walletAddress]);
+  }, [walletAddress, gasEstimate]);
+
+  // Fallback: If we don't have a gas estimate but have wallet name and address, estimate gas
+  useEffect(() => {
+    if (walletAddress && walletName && !gasEstimate && !isEstimatingGas) {
+      console.log('CompleteStep - Fallback: Estimating gas because gasEstimate is null');
+      // We can't estimate gas here because we don't have the private key
+      // This is just for debugging - the real fix is in CreateWallet
+    }
+  }, [walletAddress, walletName, gasEstimate, isEstimatingGas]);
 
   const checkFundingStatus = async () => {
     if (!walletAddress) return;
     
     setIsCheckingStatus(true);
     try {
-      const status = await FundingService.getFundingStatus(walletAddress);
+      // Use gas estimate amount if available, otherwise use default
+      const fundingAmount = gasEstimate ? (parseFloat(gasEstimate.gasCostInWCO) * 1.1).toFixed(6) : "0.32";
+      
+      console.log('CompleteStep - checkFundingStatus:', {
+        gasEstimate,
+        gasCostInWCO: gasEstimate?.gasCostInWCO,
+        fundingAmount,
+        walletAddress
+      });
+      
+      const status = await FundingService.getFundingStatus(walletAddress, fundingAmount);
       setFundingStatus(status);
     } catch (error) {
       console.error('Error checking funding status:', error);
@@ -48,12 +77,20 @@ export const CompleteStep = ({ walletName, walletAddress }: CompleteStepProps) =
     
     setIsFunding(true);
     try {
-      const result = await FundingService.fundWallet(walletAddress);
+      let result;
+      if (gasEstimate) {
+        // Use gas-based funding if gas estimate is available
+        result = await FundingService.fundWalletForGas(walletAddress, gasEstimate.gasCostInWCO);
+      } else {
+        // Fallback to default funding
+        result = await FundingService.fundWallet(walletAddress);
+      }
       
       if (result.success) {
+        const fundingAmount = gasEstimate ? (parseFloat(gasEstimate.gasCostInWCO) * 1.1).toFixed(6) : FundingService.getMinimumFundingAmount();
         toast({
           title: "Wallet Funded Successfully!",
-          description: `Your wallet has been funded with ${FundingService.getMinimumFundingAmount()} WCO tokens.`,
+          description: `Your wallet has been funded with ${fundingAmount} WCO tokens.`,
         });
         // Refresh funding status
         await checkFundingStatus();
@@ -128,17 +165,77 @@ export const CompleteStep = ({ walletName, walletAddress }: CompleteStepProps) =
                 )}
               </div>
             </div>
-            <div className="flex justify-center gap-2">
+            <div className="flex justify-center gap-2 flex-wrap">
               <Badge variant="secondary">✓ Secure</Badge>
               <Badge variant="secondary">✓ Backed Up</Badge>
               <Badge variant="secondary">✓ Ready</Badge>
               {fundingStatus?.isFunded && (
                 <Badge variant="secondary" className="bg-green-100 text-green-800">✓ Funded</Badge>
               )}
+              {gasEstimate && (
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                  <Zap className="w-3 h-3 mr-1" />
+                  Gas: {gasEstimate.gasCostInWCO} WCO
+                </Badge>
+              )}
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Gas Estimation Section */}
+      {(gasEstimate || isEstimatingGas) && (
+        <Card className="border-primary/20">
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-primary" />
+                <h3 className="text-lg font-semibold">Gas Estimation</h3>
+                {isEstimatingGas && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+              </div>
+              
+              {isEstimatingGas ? (
+                <div className="flex items-center justify-center gap-2 text-muted-foreground py-8">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Estimating gas costs...</span>
+                </div>
+              ) : gasEstimate ? (
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Estimated Gas:</span>
+                        <span className="font-mono">{gasEstimate.estimatedGas.toString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Gas with Buffer:</span>
+                        <span className="font-mono">{gasEstimate.gasWithBuffer.toString()}</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Gas Price:</span>
+                        <span className="font-mono">{(Number(gasEstimate.gasPrice) / 1e9).toFixed(2)} gwei</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Total Cost:</span>
+                        <span className="font-mono font-semibold text-primary">{gasEstimate.gasCostInWCO} WCO</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+              
+              <Alert>
+                <Zap className="h-4 w-4" />
+                <AlertDescription>
+                  The wallet will be automatically funded with the exact amount needed for gas fees plus a 10% buffer for safety.
+                </AlertDescription>
+              </Alert>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Funding Section */}
       {walletAddress && (

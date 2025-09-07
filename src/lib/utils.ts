@@ -1,3 +1,5 @@
+//Old working code for utils.ts
+
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import type { Abi } from "viem";
@@ -39,6 +41,105 @@ export async function addGuardian(guardian: `0x${string}`) {
   return publicClient.waitForTransactionReceipt({ hash });
 }
 
+// Gas estimation interface
+export interface GasEstimate {
+  estimatedGas: bigint;
+  gasWithBuffer: bigint;
+  gasPrice: bigint;
+  gasCost: bigint;
+  gasCostInWCO: string;
+}
+
+// Estimate gas for wallet creation without deploying
+export const estimateWalletCreationGas = async (name: string, privateKey: string): Promise<GasEstimate> => {
+  try {
+    // Create a wallet from the private key
+    const account = privateKeyToAccount(privateKey as `0x${string}`);
+    
+    console.log(`Estimating gas for wallet creation: ${account.address}`);
+    
+    // Estimate gas for the createWallet function call with fallback
+    let estimatedGas: bigint;
+    
+    try {
+      // Try to estimate gas using the contract method
+      estimatedGas = await publicClient.estimateContractGas({
+        address: contracts.walletFactory.address,
+        abi: contracts.walletFactory.abi,
+        functionName: 'createWallet',
+        args: [name],
+        account: account.address,
+      });
+      console.log(`Gas estimated via RPC: ${estimatedGas}`);
+    } catch (error) {
+      // Fallback to a reasonable estimate if RPC estimation fails
+      console.warn('RPC gas estimation failed, using fallback estimate:', error);
+      
+      // For a simple proxy deployment + initialization, this should be sufficient
+      // But we're seeing high gas usage, so let's be more generous
+      // Base transaction: 21,000
+      // Contract creation: ~100,000 (increased from 32,000)
+      // String storage: ~5,000 per character (increased from 2,000)
+      // Initialize function call: ~50,000 (increased from 15,000)
+      const baseGas = 21000n; // Base transaction cost
+      const contractCreationGas = 100000n; // Proxy creation with buffer
+      const stringStorageGas = BigInt(name.length) * 5000n; // String storage cost with buffer
+      const initializationGas = 50000n; // Initialize function call with buffer
+      
+      estimatedGas = baseGas + contractCreationGas + stringStorageGas + initializationGas;
+      console.log(`Using fallback gas estimate: ${estimatedGas} (base: ${baseGas}, creation: ${contractCreationGas}, string: ${stringStorageGas}, init: ${initializationGas})`);
+    }
+
+    // Add 20% buffer to gas estimate for safety
+    const gasWithBuffer = (estimatedGas * 120n) / 100n;
+    
+    console.log(`Gas estimation: ${estimatedGas} (with buffer: ${gasWithBuffer})`);
+    
+    // Get gas price with EIP-1559 optimization if available
+    let gasPrice: bigint;
+    
+    try {
+      // Try to get EIP-1559 gas parameters for better cost optimization
+      const feeData = await publicClient.estimateFeesPerGas();
+      if (feeData.maxFeePerGas && feeData.maxPriorityFeePerGas) {
+        gasPrice = feeData.maxFeePerGas; // Use maxFeePerGas for cost calculation
+        console.log(`Using EIP-1559 gas pricing: maxFeePerGas=${gasPrice}`);
+      } else {
+        gasPrice = await publicClient.getGasPrice();
+        console.log(`Using legacy gas price: ${gasPrice}`);
+      }
+    } catch (error) {
+      console.warn('Failed to get gas price from RPC, using fallback:', error);
+      // Fallback to a reasonable gas price if RPC calls fail
+      // For W-Chain testnet, use a conservative estimate
+      gasPrice = 1000000000n; // 1 gwei as fallback
+      console.log(`Using fallback gas price: ${gasPrice} wei (1 gwei)`);
+    }
+    
+    // Ensure gasPrice is defined and valid
+    if (!gasPrice || gasPrice <= 0n) {
+      gasPrice = 1000000000n; // 1 gwei as final fallback
+      console.log(`Using final fallback gas price: ${gasPrice} wei`);
+    }
+    
+    const gasCost = gasPrice * gasWithBuffer;
+    const gasCostInWCO = (Number(gasCost) / 1e18).toFixed(6);
+    
+    console.log(`Gas cost calculation: ${gasPrice} * ${gasWithBuffer} = ${gasCost} wei (${gasCostInWCO} WCO)`);
+    
+    return {
+      estimatedGas,
+      gasWithBuffer,
+      gasPrice,
+      gasCost,
+      gasCostInWCO
+    };
+  } catch (error) {
+    console.error('Gas estimation failed:', error);
+    throw error;
+  }
+};
+
 export const deploySmartContractWallet = async (name: string, privateKey: string) => {
   try {
     // Create a wallet from the private key
@@ -75,83 +176,9 @@ export const deploySmartContractWallet = async (name: string, privateKey: string
       throw new Error(`Contract deployment verification failed: ${codeCheckError instanceof Error ? codeCheckError.message : 'Unknown error'}`);
     }
     
-    // Estimate gas for the createWallet function call with fallback
-    let estimatedGas: bigint;
-    
-    try {
-      // Try to estimate gas using the contract method
-      estimatedGas = await publicClient.estimateContractGas({
-        address: contracts.walletFactory.address,
-        abi: contracts.walletFactory.abi,
-        functionName: 'createWallet',
-        args: [name],
-        account: account.address,
-      });
-      console.log(`Gas estimated via RPC: ${estimatedGas}`);
-      
-      // If RPC estimation is very high, cap it to prevent excessive costs
-      const maxReasonableGas = 150000n; // Cap at 150k gas
-      if (estimatedGas > maxReasonableGas) {
-        console.warn(`RPC gas estimate (${estimatedGas}) is very high, capping at ${maxReasonableGas}`);
-        estimatedGas = maxReasonableGas;
-      }
-    } catch (error) {
-      // Fallback to a reasonable estimate if RPC estimation fails
-      console.warn('RPC gas estimation failed, using fallback estimate:', error);
-      
-      // Optimized gas estimates based on actual usage
-      // Base transaction: 21,000
-      // Contract creation: ~60,000 (reduced from 100,000, still safe)
-      // String storage: ~3,000 per character (reduced from 5,000)
-      // Initialize function call: ~30,000 (reduced from 50,000)
-      const baseGas = 21000n; // Base transaction cost
-      const contractCreationGas = 60000n; // Proxy creation (optimized)
-      const stringStorageGas = BigInt(name.length) * 3000n; // String storage cost (optimized)
-      const initializationGas = 30000n; // Initialize function call (optimized)
-      
-      estimatedGas = baseGas + contractCreationGas + stringStorageGas + initializationGas;
-      console.log(`Using fallback gas estimate: ${estimatedGas} (base: ${baseGas}, creation: ${contractCreationGas}, string: ${stringStorageGas}, init: ${initializationGas})`);
-    }
-
-    // Add 15% buffer to gas estimate for safety (reduced from 20%)
-    const gasWithBuffer = (estimatedGas * 115n) / 100n;
-    
-    console.log(`Gas estimation: ${estimatedGas} (with buffer: ${gasWithBuffer})`);
-    
-    // Get gas price with EIP-1559 optimization if available
-    let gasPrice: bigint;
-    let maxFeePerGas: bigint | undefined;
-    let maxPriorityFeePerGas: bigint | undefined;
-    
-    try {
-      // Try to get EIP-1559 gas parameters for better cost optimization
-      const feeData = await publicClient.estimateFeesPerGas();
-      if (feeData.maxFeePerGas && feeData.maxPriorityFeePerGas) {
-        maxFeePerGas = feeData.maxFeePerGas;
-        maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
-        gasPrice = maxFeePerGas; // Use maxFeePerGas for cost calculation
-        console.log(`Using EIP-1559 gas pricing: maxFeePerGas=${maxFeePerGas}, maxPriorityFeePerGas=${maxPriorityFeePerGas}`);
-      } else {
-        gasPrice = await publicClient.getGasPrice();
-        console.log(`Using legacy gas price: ${gasPrice}`);
-      }
-    } catch (error) {
-      console.warn('Failed to get gas price from RPC, using fallback:', error);
-      // Fallback to a reasonable gas price if RPC calls fail
-      // For W-Chain testnet, use a conservative estimate
-      gasPrice = 1000000000n; // 1 gwei as fallback
-      console.log(`Using fallback gas price: ${gasPrice} wei (1 gwei)`);
-    }
-    
-    // Ensure gasPrice is defined and valid
-    if (!gasPrice || gasPrice <= 0n) {
-      gasPrice = 1000000000n; // 1 gwei as final fallback
-      console.log(`Using final fallback gas price: ${gasPrice} wei`);
-    }
-    
-    const gasCost = gasPrice * gasWithBuffer;
-    
-    console.log(`Gas cost calculation: ${gasPrice} * ${gasWithBuffer} = ${gasCost} wei`);
+    // Get gas estimate
+    const gasEstimate = await estimateWalletCreationGas(name, privateKey);
+    const { gasWithBuffer, gasPrice, gasCost } = gasEstimate;
     
     // Check if the account has sufficient balance for gas
     const balance = await publicClient.getBalance({
