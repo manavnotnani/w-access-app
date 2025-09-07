@@ -15,7 +15,7 @@ const Features = () => {
     {
       icon: User,
       title: "Human-Readable Names",
-      description: "Replace complex wallet addresses with simple, memorable names like 'alice.w-access'",
+      description: "Replace complex wallet addresses with simple, memorable names like 'alice.w-chain'",
       benefits: ["Easy to remember", "Typo-resistant", "Share with confidence"]
     },
     {

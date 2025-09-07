@@ -11,7 +11,7 @@ const HowItWorks = () => {
       step: "01",
       icon: MousePointer,
       title: "Choose Your Name",
-      description: "Pick a human-readable name like 'alice.w-access' or 'company.w-access'",
+      description: "Pick a human-readable name like 'alice.w-chain' or 'company.w-chain'",
       highlight: "Simple & Memorable"
     },
     {
@@ -96,7 +96,7 @@ const HowItWorks = () => {
               <div className="bg-background/50 rounded-xl p-6 border border-border/30 mb-6">
                 <div className="flex items-center justify-center space-x-2 text-lg">
                   <span className="text-muted-foreground">Your wallet:</span>
-                  <span className="bg-gradient-hero bg-clip-text text-transparent font-bold">alice.w-access</span>
+                  <span className="bg-gradient-hero bg-clip-text text-transparent font-bold">alice.w-chain</span>
                 </div>
                 <div className="text-sm text-muted-foreground mt-2 text-center">
                   <span className="hidden sm:inline">Instead of: 0x742d35cc6b19c6b6d5f5b9ff5c5f5d5f5d5f5d5f</span>
