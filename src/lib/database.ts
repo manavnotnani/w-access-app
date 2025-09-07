@@ -1,4 +1,8 @@
 import { supabase, Wallet, RecoveryMethod, WalletSettings } from './supabase'
+import { walletSession } from './session'
+
+// Development mode flag - set to true when Supabase is offline
+const DEVELOPMENT_MODE = true
 
 // Wallet operations
 export const walletService = {
@@ -20,18 +24,49 @@ export const walletService = {
 
   // Create a new wallet
   async createWallet(walletData: Omit<Wallet, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Wallet | null> {
-    const { data, error } = await supabase
-      .from('wallets')
-      .insert([walletData])
-      .select()
-      .single()
-    
-    if (error) {
-      console.error('Error creating wallet:', error)
-      return null
+    if (DEVELOPMENT_MODE) {
+      // Development mode: skip session tracking
+      console.log('Creating wallet without session tracking (Development mode)')
+      
+      const walletDataWithoutSession = {
+        name: walletData.name,
+        address: walletData.address,
+        seed_phrase_hash: walletData.seed_phrase_hash
+      }
+      
+      const { data, error } = await supabase
+        .from('wallets')
+        .insert([walletDataWithoutSession])
+        .select()
+        .single()
+      
+      if (error) {
+        console.error('Error creating wallet:', error)
+        return null
+      }
+      
+      return data
+    } else {
+      // Production mode: use session tracking
+      const sessionId = walletSession.getSessionId()
+      const walletWithSession = {
+        ...walletData,
+        session_id: sessionId
+      }
+      
+      const { data, error } = await supabase
+        .from('wallets')
+        .insert([walletWithSession])
+        .select()
+        .single()
+      
+      if (error) {
+        console.error('Error creating wallet:', error)
+        return null
+      }
+      
+      return data
     }
-    
-    return data
   },
 
   // Get all wallets (for development/demo purposes)
@@ -47,6 +82,41 @@ export const walletService = {
     }
     
     return data || []
+  },
+
+  // Get wallets for current session
+  async getWalletsBySession(): Promise<Wallet[]> {
+    if (DEVELOPMENT_MODE) {
+      // Development mode: return all wallets
+      console.log('Fetching all wallets (Development mode)')
+      
+      const { data, error } = await supabase
+        .from('wallets')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (error) {
+        console.error('Error fetching wallets:', error)
+        return []
+      }
+      
+      return data || []
+    } else {
+      // Production mode: filter by session
+      const sessionId = walletSession.getSessionId()
+      const { data, error } = await supabase
+        .from('wallets')
+        .select('*')
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: false })
+      
+      if (error) {
+        console.error('Error fetching session wallets:', error)
+        return []
+      }
+      
+      return data || []
+    }
   },
 
   // Get wallet by ID

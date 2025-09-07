@@ -5,6 +5,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS wallets (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID DEFAULT uuid_generate_v4(), -- Auto-generated user ID
+  session_id TEXT, -- Session identifier for wallet association
   name TEXT UNIQUE NOT NULL,
   address TEXT UNIQUE NOT NULL,
   seed_phrase_hash TEXT NOT NULL,
@@ -35,6 +36,7 @@ CREATE TABLE IF NOT EXISTS wallet_settings (
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_wallets_user_id ON wallets(user_id);
+CREATE INDEX IF NOT EXISTS idx_wallets_session_id ON wallets(session_id);
 CREATE INDEX IF NOT EXISTS idx_wallets_name ON wallets(name);
 CREATE INDEX IF NOT EXISTS idx_wallets_address ON wallets(address);
 CREATE INDEX IF NOT EXISTS idx_recovery_methods_wallet_id ON recovery_methods(wallet_id);

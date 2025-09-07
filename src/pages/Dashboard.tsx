@@ -2,26 +2,35 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Wallet, Copy, ExternalLink } from "lucide-react";
+import { Plus, Wallet, Copy, ExternalLink, LogOut, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { walletService } from "@/lib/database";
 import { Wallet as WalletType } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { walletSession } from "@/lib/session";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const Dashboard = () => {
   const [wallets, setWallets] = useState<WalletType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sessionInfo, setSessionInfo] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     loadWallets();
+    loadSessionInfo();
   }, []);
+
+  const loadSessionInfo = () => {
+    const info = walletSession.getSessionInfo();
+    setSessionInfo(info);
+  };
 
   const loadWallets = async () => {
     try {
-      // Get all wallets (no user authentication needed)
-      const userWallets = await walletService.getAllWallets();
+      // Get wallets for current session
+      const userWallets = await walletService.getWalletsBySession();
       setWallets(userWallets);
     } catch (error) {
       console.error("Error loading wallets:", error);
@@ -60,6 +69,16 @@ const Dashboard = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
+  const handleLogout = () => {
+    walletSession.clearSession();
+    setWallets([]);
+    setSessionInfo(null);
+    toast({
+      title: "Session Cleared",
+      description: "Your session has been cleared. Wallets will be hidden until you create a new session.",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -69,16 +88,66 @@ const Dashboard = () => {
             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               My Wallets
             </h1>
-            <Button
-              onClick={() => navigate("/create-wallet")}
-              className="bg-gradient-primary hover:opacity-90"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create Wallet
-            </Button>
+            <div className="flex items-center gap-2">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Info className="w-4 h-4 mr-2" />
+                    Session Info
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Session Information</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      <div className="space-y-2 mt-4">
+                        <p><strong>Session ID:</strong> {sessionInfo?.id?.slice(0, 8)}...</p>
+                        <p><strong>Created:</strong> {sessionInfo?.created ? new Date(sessionInfo.created).toLocaleString() : 'Unknown'}</p>
+                        <p><strong>Last Access:</strong> {sessionInfo?.lastAccess ? new Date(sessionInfo.lastAccess).toLocaleString() : 'Unknown'}</p>
+                        <p><strong>Status:</strong> <span className={sessionInfo?.isValid ? 'text-green-600' : 'text-red-600'}>{sessionInfo?.isValid ? 'Valid' : 'Expired'}</span></p>
+                      </div>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Close</AlertDialogCancel>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Clear Session
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Clear Session</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will clear your current session and hide all wallets. You can create a new session by creating a new wallet or refreshing the page.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleLogout}>
+                      Clear Session
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              
+              <Button
+                onClick={() => navigate("/create-wallet")}
+                className="bg-gradient-primary hover:opacity-90"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Wallet
+              </Button>
+            </div>
           </div>
           <p className="text-muted-foreground">
-            Manage your W-Chain wallets and view their details.
+            Manage your W-Chain wallets and view their details. Wallets are associated with your current browser session.
           </p>
         </div>
 

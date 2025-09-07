@@ -13,6 +13,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 export interface Wallet {
   id: string
   user_id: string
+  session_id?: string
   name: string
   address: string
   seed_phrase_hash: string
