@@ -1,12 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Mail, Twitter, Github } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import ContactModal from "./ContactModal";
 
 const CTA = () => {
   const navigate = useNavigate();
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
   const handleCreateWallet = () => {
     navigate('/create-wallet');
+  };
+
+  const handleContactTeam = () => {
+    setIsContactModalOpen(true);
   };
 
   return (
@@ -39,6 +46,7 @@ const CTA = () => {
                 variant="outline" 
                 size="lg"
                 className="border-border bg-card/30 backdrop-blur-sm hover:bg-card/50 px-8 py-4 text-lg"
+                onClick={handleContactTeam}
               >
                 Contact Team
               </Button>
@@ -92,6 +100,12 @@ const CTA = () => {
           </div>
         </div>
       </div>
+
+      {/* Contact Team Modal */}
+      <ContactModal 
+        isOpen={isContactModalOpen} 
+        onOpenChange={setIsContactModalOpen} 
+      />
     </section>
   );
 };

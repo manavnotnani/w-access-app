@@ -1,25 +1,39 @@
 import { Twitter, Github, Mail, Globe } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import ContactModal from "./ContactModal";
 
 const Footer = () => {
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const navigate = useNavigate();
+
   const footerLinks = {
     Product: [
       { name: "Features", href: "#features" },
-      { name: "How It Works", href: "#how-it-works" },
-      { name: "Pricing", href: "#pricing" },
-      { name: "Demo", href: "#demo" }
+      { name: "How It Works", href: "/coming-soon", isComingSoon: true },
+      { name: "Pricing", href: "/coming-soon", isComingSoon: true },
+      { name: "Demo", href: "/coming-soon", isComingSoon: true }
     ],
     Resources: [
-      { name: "Documentation", href: "#docs" },
-      { name: "API Reference", href: "#api" },
-      { name: "Community", href: "#community" },
-      { name: "Support", href: "#support" }
+      { name: "Documentation", href: "/coming-soon", isComingSoon: true },
+      { name: "API Reference", href: "/coming-soon", isComingSoon: true },
+      { name: "Community", href: "/coming-soon", isComingSoon: true },
+      { name: "Support", href: "/coming-soon", isComingSoon: true }
     ],
     Company: [
-      { name: "About", href: "#about" },
-      { name: "Blog", href: "#blog" },
-      { name: "Careers", href: "#careers" },
-      { name: "Contact", href: "#contact" }
+      { name: "About", href: "/coming-soon", isComingSoon: true },
+      { name: "Blog", href: "/coming-soon", isComingSoon: true },
+      { name: "Careers", href: "/coming-soon", isComingSoon: true },
+      { name: "Contact", href: "#contact", isModal: true }
     ]
+  };
+
+  const handleLinkClick = (link: any) => {
+    if (link.isModal) {
+      setIsContactModalOpen(true);
+    } else if (link.isComingSoon) {
+      navigate('/coming-soon');
+    }
   };
 
   const socialLinks = [
@@ -71,8 +85,14 @@ const Footer = () => {
                   {links.map((link) => (
                     <li key={link.name}>
                       <a
-                        href={link.href}
-                        className="text-muted-foreground hover:text-gold transition-colors duration-200"
+                        href={link.isModal || link.isComingSoon ? "#" : link.href}
+                        onClick={(e) => {
+                          if (link.isModal || link.isComingSoon) {
+                            e.preventDefault();
+                            handleLinkClick(link);
+                          }
+                        }}
+                        className="text-muted-foreground hover:text-gold transition-colors duration-200 cursor-pointer"
                       >
                         {link.name}
                       </a>
@@ -105,6 +125,12 @@ const Footer = () => {
           </div>
         </div>
       </div>
+
+      {/* Contact Modal */}
+      <ContactModal 
+        isOpen={isContactModalOpen} 
+        onOpenChange={setIsContactModalOpen} 
+      />
     </footer>
   );
 };

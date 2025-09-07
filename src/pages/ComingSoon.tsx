@@ -22,7 +22,7 @@ const ComingSoon = () => {
               className="text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Go Back
+              
             </Button>
           </div>
 
