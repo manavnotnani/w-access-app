@@ -12,6 +12,8 @@ import Settings from "./pages/Settings";
 import SecuritySetup from "./pages/SecuritySetup";
 import WalletTutorial from "./pages/WalletTutorial";
 import ComingSoon from "./pages/ComingSoon";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +34,8 @@ const App = () => (
           <Route path="/security-setup" element={<SecuritySetup />} />
           <Route path="/wallet-tutorial" element={<WalletTutorial />} />
           <Route path="/coming-soon" element={<ComingSoon />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

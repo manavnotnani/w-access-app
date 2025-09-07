@@ -1,12 +1,31 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Mail, Twitter, Github } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import ContactModal from "./ContactModal";
 
 const CTA = () => {
   const navigate = useNavigate();
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
   const handleCreateWallet = () => {
     navigate('/create-wallet');
+  };
+
+  const handleContactTeam = () => {
+    setIsContactModalOpen(true);
+  };
+
+  const handleTwitterClick = () => {
+    window.open('https://twitter.com/heymanavv', '_blank');
+  };
+
+  const handleGithubClick = () => {
+    window.open('https://github.com/manavnotnani', '_blank');
+  };
+
+  const handleEmailClick = () => {
+    window.open('mailto:manav.notnani@gmail.com', '_blank');
   };
 
   return (
@@ -39,6 +58,7 @@ const CTA = () => {
                 variant="outline" 
                 size="lg"
                 className="border-border bg-card/30 backdrop-blur-sm hover:bg-card/50 px-8 py-4 text-lg"
+                onClick={handleContactTeam}
               >
                 Contact Team
               </Button>
@@ -76,15 +96,30 @@ const CTA = () => {
             </p>
             
             <div className="flex justify-center space-x-6">
-              <Button variant="outline" size="sm" className="border-border bg-card/30 hover:bg-card/50">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-border bg-card/30 hover:bg-card/50"
+                onClick={handleTwitterClick}
+              >
                 <Twitter className="w-4 h-4 mr-2" />
                 Twitter
               </Button>
-              <Button variant="outline" size="sm" className="border-border bg-card/30 hover:bg-card/50">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-border bg-card/30 hover:bg-card/50"
+                onClick={handleGithubClick}
+              >
                 <Github className="w-4 h-4 mr-2" />
                 GitHub
               </Button>
-              <Button variant="outline" size="sm" className="border-border bg-card/30 hover:bg-card/50">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-border bg-card/30 hover:bg-card/50"
+                onClick={handleEmailClick}
+              >
                 <Mail className="w-4 h-4 mr-2" />
                 Email
               </Button>
@@ -92,6 +127,12 @@ const CTA = () => {
           </div>
         </div>
       </div>
+
+      {/* Contact Team Modal */}
+      <ContactModal 
+        isOpen={isContactModalOpen} 
+        onOpenChange={setIsContactModalOpen} 
+      />
     </section>
   );
 };
