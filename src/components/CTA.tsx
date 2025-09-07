@@ -16,6 +16,18 @@ const CTA = () => {
     setIsContactModalOpen(true);
   };
 
+  const handleTwitterClick = () => {
+    window.open('https://twitter.com/heymanavv', '_blank');
+  };
+
+  const handleGithubClick = () => {
+    window.open('https://github.com/manavnotnani', '_blank');
+  };
+
+  const handleEmailClick = () => {
+    window.open('mailto:manav.notnani@gmail.com', '_blank');
+  };
+
   return (
     <section className="py-24 bg-gradient-to-br from-dark-surface via-background to-dark-surface relative overflow-hidden">
       {/* Background Effects */}
@@ -84,15 +96,30 @@ const CTA = () => {
             </p>
             
             <div className="flex justify-center space-x-6">
-              <Button variant="outline" size="sm" className="border-border bg-card/30 hover:bg-card/50">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-border bg-card/30 hover:bg-card/50"
+                onClick={handleTwitterClick}
+              >
                 <Twitter className="w-4 h-4 mr-2" />
                 Twitter
               </Button>
-              <Button variant="outline" size="sm" className="border-border bg-card/30 hover:bg-card/50">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-border bg-card/30 hover:bg-card/50"
+                onClick={handleGithubClick}
+              >
                 <Github className="w-4 h-4 mr-2" />
                 GitHub
               </Button>
-              <Button variant="outline" size="sm" className="border-border bg-card/30 hover:bg-card/50">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-border bg-card/30 hover:bg-card/50"
+                onClick={handleEmailClick}
+              >
                 <Mail className="w-4 h-4 mr-2" />
                 Email
               </Button>
