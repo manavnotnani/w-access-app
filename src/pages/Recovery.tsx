@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { walletService } from "@/lib/database";
 import { validateEmail } from "@/lib/utils";
+import { sendOtpEmail } from "@/lib/email";
 
 const Recovery = () => {
   const [seedPhrase, setSeedPhrase] = useState(Array(12).fill(""));
@@ -93,8 +94,8 @@ const Recovery = () => {
     try {
       const code = Math.floor(100000 + Math.random() * 900000).toString();
       setEmailSentCode(code);
-      console.log(`Wallet recovery code for ${email}: ${code}`);
-      toast({ title: "Verification code sent", description: "Check your email (dev: console)." });
+      await sendOtpEmail({ to: email, code, subject: "Your recovery code" });
+      toast({ title: "Verification code sent", description: "Check your email for the code." });
     } finally {
       setEmailSending(false);
     }

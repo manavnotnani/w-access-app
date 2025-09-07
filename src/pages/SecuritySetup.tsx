@@ -10,6 +10,7 @@ import { Shield, Key, Smartphone, Mail, CheckCircle, ArrowRight, Lock } from "lu
 import { useNavigate } from "react-router-dom";
 import { validateEmail } from "@/lib/utils";
 import { walletService, recoveryService, settingsService } from "@/lib/database";
+import { sendOtpEmail } from "@/lib/email";
 import { useToast } from "@/hooks/use-toast";
 
 const SecuritySetup = () => {
@@ -56,13 +57,11 @@ const SecuritySetup = () => {
       }
       setMethodId(method.id);
 
-      // Generate a 6-digit code (demo)
+      // Generate a 6-digit code and send via email
       const code = Math.floor(100000 + Math.random() * 900000).toString();
       setSentCode(code);
-
-      // In a real app, send via email provider; for demo log it
-      console.log(`Recovery verification code for ${recoveryEmail}: ${code}`);
-      toast({ title: "Verification code sent", description: "Check console for demo code." });
+      await sendOtpEmail({ to: recoveryEmail, code, subject: "Your verification code" });
+      toast({ title: "Verification code sent", description: "Check your email for the code." });
     } catch (e) {
       console.error(e);
       toast({ title: "Error", description: "Could not send verification code.", variant: "destructive" });
