@@ -65,7 +65,7 @@ const Footer = () => {
                 Simplifying Web3 wallet creation and management with
                 human-readable names and secure recovery options.
               </p>
-              <div className="flex space-x-4">
+              {/* <div className="flex space-x-4">
                 {socialLinks.map((social) => (
                   <a
                     key={social.name}
@@ -75,7 +75,7 @@ const Footer = () => {
                     <social.icon className="w-5 h-5 text-muted-foreground hover:text-gold" />
                   </a>
                 ))}
-              </div>
+              </div> */}
             </div>
 
             {/* Links Sections */}
