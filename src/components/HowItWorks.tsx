@@ -1,8 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, MousePointer, UserCheck, Wallet } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const HowItWorks = () => {
+  const navigate = useNavigate();
+  
   const steps = [
     {
       step: "01",
@@ -100,7 +103,10 @@ const HowItWorks = () => {
                 </div>
               </div>
 
-              <Button className="bg-gradient-hero text-primary-foreground hover:shadow-glow transition-all duration-300">
+              <Button 
+                onClick={() => navigate('/coming-soon')}
+                className="bg-gradient-hero text-primary-foreground hover:shadow-glow transition-all duration-300"
+              >
                 Try Interactive Demo
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Button>

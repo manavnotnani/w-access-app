@@ -128,7 +128,42 @@ All colors MUST be HSL.
 
 @layer utilities {
   .bg-gradient-primary {
+    /* Fallback for browsers that don't support CSS custom properties */
+    background: linear-gradient(135deg, #F5B400 0%, #3B82F6 100%);
+    /* Modern browsers with CSS custom properties */
     background: linear-gradient(135deg, hsl(var(--gold)) 0%, hsl(var(--blue-accent)) 100%);
+  }
+  
+  /* Enhanced backdrop blur with fallbacks */
+  .backdrop-blur-fallback {
+    background-color: rgba(0, 0, 0, 0.1);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+  }
+  
+  /* Enhanced mix blend mode with fallbacks */
+  .mix-blend-fallback {
+    opacity: 0.9;
+    -webkit-mix-blend-mode: multiply;
+    mix-blend-mode: multiply;
+  }
+  
+  .dark .mix-blend-fallback {
+    -webkit-mix-blend-mode: screen;
+    mix-blend-mode: screen;
+  }
+  
+  /* Enhanced gradient text with better browser support */
+  .gradient-text {
+    background: linear-gradient(135deg, #F5B400 0%, #3B82F6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+    /* Fallback for browsers that don't support background-clip: text */
+    @supports not (background-clip: text) {
+      color: #F5B400;
+    }
   }
   
   .no-focus-ring {
@@ -160,4 +195,114 @@ input:focus-visible {
   border-color: hsl(var(--border)) !important;
   ring: none !important;
   ring-offset: none !important;
+}
+
+/* Browser-specific fixes for better compatibility */
+@supports not (backdrop-filter: blur(4px)) {
+  .backdrop-blur-fallback {
+    background-color: rgba(0, 0, 0, 0.2) !important;
+  }
+}
+
+/* Ensure consistent font rendering across browsers */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Fix for Safari gradient rendering */
+@supports (-webkit-appearance: none) {
+  .gradient-text {
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+  }
+}
+
+/* Fallback for browsers that don't support CSS custom properties */
+@supports not (color: hsl(var(--gold))) {
+  .text-gold {
+    color: #F5B400 !important;
+  }
+  
+  .text-blue-accent {
+    color: #3B82F6 !important;
+  }
+  
+  .border-gold {
+    border-color: #F5B400 !important;
+  }
+  
+  .border-blue-accent {
+    border-color: #3B82F6 !important;
+  }
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 640px) {
+  /* Improve touch targets */
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better spacing for mobile */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Improve text readability on mobile */
+  body {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  
+  /* Prevent horizontal scroll */
+  html, body {
+    overflow-x: hidden;
+  }
+  
+  /* Better mobile typography */
+  h1, h2, h3, h4, h5, h6 {
+    word-wrap: break-word;
+    hyphens: auto;
+  }
+  
+  /* Improve mobile button interactions */
+  .btn-mobile {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Better mobile form inputs */
+  input, textarea, select {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* Tablet-specific improvements */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* Touch device improvements */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover effects on touch devices */
+  .hover\:translate-x-1:hover {
+    transform: none;
+  }
+  
+  .hover\:border-blue-accent:hover {
+    border-color: inherit;
+  }
+  
+  /* Improve touch feedback */
+  button:active, a:active, [role="button"]:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
 }
