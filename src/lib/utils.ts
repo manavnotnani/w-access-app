@@ -12,6 +12,19 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// Basic, RFC5322-inspired email validation suitable for client-side checks
+// Intentionally conservative to avoid false positives; server should re-validate
+export function validateEmail(email: string): boolean {
+  if (!email) return false;
+  const trimmed = email.trim();
+  if (trimmed.length > 254) return false; // practical upper bound
+  // Disallow spaces and consecutive dots, require one @ with valid parts
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  if (!emailRegex.test(trimmed)) return false;
+  if (trimmed.includes("..")) return false;
+  return true;
+}
+
 export async function getGuardianCount(): Promise<bigint> {
   const params = {
     address: contracts.walletImplementation.address,

@@ -226,12 +226,14 @@ export const CompleteStep = ({ walletName, walletAddress, gasEstimate, isEstimat
                 </div>
               ) : null}
               
-              <Alert>
-                <Zap className="h-4 w-4" />
-                <AlertDescription>
-                  The wallet will be automatically funded with the exact amount needed for gas fees plus a 10% buffer for safety.
-                </AlertDescription>
-              </Alert>
+              {!fundingStatus?.error && (
+                <Alert>
+                  <Zap className="h-4 w-4" />
+                  <AlertDescription>
+                    The wallet will be automatically funded with the exact amount needed for gas fees plus a 10% buffer for safety.
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -266,26 +268,37 @@ export const CompleteStep = ({ walletName, walletAddress, gasEstimate, isEstimat
                         <span>Wallet needs funding to be fully functional</span>
                       </div>
                       
-                      <div className="bg-muted/50 p-3 rounded-lg">
-                        <div className="text-sm space-y-1">
-                          <div className="flex justify-between">
-                            <span>Server Balance:</span>
-                            <span className="font-mono">{fundingStatus.balance} WCO</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Funding Amount:</span>
-                            <span className="font-mono">{fundingStatus.fundingAmount} WCO</span>
+                      {!fundingStatus.error && (
+                        <div className="bg-muted/50 p-3 rounded-lg">
+                          <div className="text-sm space-y-1">
+                            <div className="flex justify-between">
+                              <span>Server Balance:</span>
+                              <span className="font-mono">{fundingStatus.balance} WCO</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Funding Amount:</span>
+                              <span className="font-mono">{fundingStatus.fundingAmount} WCO</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      )}
                       
                       {fundingStatus.error ? (
-                        <Alert variant="destructive">
-                          <AlertTriangle className="h-4 w-4" />
-                          <AlertDescription>
-                            {fundingStatus.error}
-                          </AlertDescription>
-                        </Alert>
+                        <div className="space-y-3">
+                          <div className="bg-muted/50 p-3 rounded-lg text-sm space-y-2">
+                            <p>
+                              Server balance is low. Please fund your wallet directly to proceed. Send at least
+                              <span className="font-semibold"> {fundingStatus.fundingAmount} WCO </span>
+                              to the address below:
+                            </p>
+                            <div className="flex items-center justify-between bg-background/60 rounded-md px-3 py-2 font-mono text-xs">
+                              <span>{walletAddress}</span>
+                              <Button variant="ghost" size="sm" className="h-7 px-2" onClick={handleCopyAddress}>
+                                <Copy className="w-3 h-3 mr-1" /> Copy
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
                       ) : (
                         <Button 
                           onClick={handleFundWallet}

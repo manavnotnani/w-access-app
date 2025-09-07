@@ -2,7 +2,7 @@ import { supabase, Wallet, RecoveryMethod, WalletSettings } from './supabase'
 import { walletSession } from './session'
 
 // Development mode flag - set to true when Supabase is offline
-const DEVELOPMENT_MODE = true
+const DEVELOPMENT_MODE = false
 
 // Wallet operations
 export const walletService = {
@@ -11,7 +11,8 @@ export const walletService = {
     const { data, error } = await supabase
       .from('wallets')
       .select('name')
-      .eq('name', name)
+      // Use case-insensitive comparison so names like "Alice" and "alice" are considered the same
+      .ilike('name', name)
       .single()
     
     if (error && error.code !== 'PGRST116') {
