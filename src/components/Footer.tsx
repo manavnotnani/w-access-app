@@ -112,7 +112,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-border/30 py-8 ">
           <div className="flex flex-col space-y-4">
-            <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 w-[79vw]">
+            <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 w-[78vw] max-w-[1140px]">
               <div className="text-muted-foreground text-sm">
                 © 2025 W-Access. Built for W-Chain. All rights reserved.
               </div>
