@@ -99,22 +99,27 @@ const CreateWallet = () => {
       keysGenerated: !!keys
     });
     
-    // Estimate gas as soon as keys are generated
+    // Estimate gas asynchronously without blocking the UI
     if (walletName) {
-      try {
-        setIsEstimatingGas(true);
-        console.log('CreateWallet - Starting gas estimation...');
-        const gasEstimate = await estimateWalletCreationGas(walletName, keys.privateKey);
-        console.log('CreateWallet - Gas estimation complete:', gasEstimate);
-        setGasEstimate(gasEstimate);
-        setIsEstimatingGas(false);
-      } catch (error) {
-        console.error('Error estimating gas:', error);
-        setIsEstimatingGas(false);
-        // Don't throw error here, just log it - gas estimation will happen again during deployment
-      }
+      // Start gas estimation in background without blocking the button
+      estimateGasInBackground(walletName, keys.privateKey);
     } else {
       console.log('CreateWallet - No wallet name, skipping gas estimation');
+    }
+  };
+
+  const estimateGasInBackground = async (name: string, privateKey: string) => {
+    try {
+      setIsEstimatingGas(true);
+      console.log('CreateWallet - Starting background gas estimation...');
+      const gasEstimate = await estimateWalletCreationGas(name, privateKey);
+      console.log('CreateWallet - Background gas estimation complete:', gasEstimate);
+      setGasEstimate(gasEstimate);
+      setIsEstimatingGas(false);
+    } catch (error) {
+      console.error('Error in background gas estimation:', error);
+      setIsEstimatingGas(false);
+      // Don't throw error here, just log it - gas estimation will happen again during deployment
     }
   };
 
@@ -358,7 +363,21 @@ const CreateWallet = () => {
           </Button>
           <Button
             onClick={handleContinue}
-            disabled={!canContinue() || isSaving || isEstimatingGas || isFunding}
+            disabled={(() => {
+              // For step 2 (Key Generation), don't require gas estimation to be complete
+              const requiresGasEstimation = step === 5; // Only step 5 (Complete) requires gas estimation
+              const disabled = !canContinue() || isSaving || (requiresGasEstimation && isEstimatingGas) || isFunding;
+              console.log('CreateWallet - Button disabled state:', {
+                step,
+                canContinue: canContinue(),
+                isSaving,
+                isEstimatingGas,
+                isFunding,
+                requiresGasEstimation,
+                disabled
+              });
+              return disabled;
+            })()}
             className="bg-gradient-primary hover:opacity-90"
           >
             {isSaving ? (
