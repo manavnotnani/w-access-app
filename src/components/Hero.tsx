@@ -193,7 +193,11 @@ const Hero = () => {
               changes everything."
             </p>
             <div className="flex items-center justify-center gap-2 sm:gap-3">
-              <div className="bg-gray-200 border-2 border-dashed rounded-lg sm:rounded-xl w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" />
+              <img 
+                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face&auto=format&q=80"
+                alt="Alex Rivera"
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-gold/20 flex-shrink-0"
+              />
               <div className="text-center sm:text-left">
                 <p className="font-medium text-foreground text-sm sm:text-base">Alex Rivera</p>
                 <p className="text-xs sm:text-sm text-muted-foreground">
