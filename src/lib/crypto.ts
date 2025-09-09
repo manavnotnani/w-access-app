@@ -44,7 +44,11 @@ export class CryptoService {
       const wallet = ethers.Wallet.createRandom();
       
       // Step 3: Get the mnemonic phrase
-      const mnemonic = wallet.mnemonic?.phrase || '';
+      const mnemonic = wallet.mnemonic?.phrase;
+      
+      if (!mnemonic) {
+        throw new Error('Failed to generate mnemonic phrase');
+      }
       
       // Step 4: Extract keys and address
       const privateKey = wallet.privateKey;

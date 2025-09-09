@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { WalletNameStep } from "@/components/wallet/WalletNameStep";
 import { KeyGenerationStep } from "@/components/wallet/KeyGenerationStep";
@@ -29,6 +29,7 @@ const CreateWallet = () => {
   const [gasEstimate, setGasEstimate] = useState<GasEstimate | null>(null);
   const [isEstimatingGas, setIsEstimatingGas] = useState(false);
   const [isFunding, setIsFunding] = useState(false);
+  const [isCreatingWallet, setIsCreatingWallet] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -99,22 +100,27 @@ const CreateWallet = () => {
       keysGenerated: !!keys
     });
     
-    // Estimate gas as soon as keys are generated
+    // Estimate gas asynchronously without blocking the UI
     if (walletName) {
-      try {
-        setIsEstimatingGas(true);
-        console.log('CreateWallet - Starting gas estimation...');
-        const gasEstimate = await estimateWalletCreationGas(walletName, keys.privateKey);
-        console.log('CreateWallet - Gas estimation complete:', gasEstimate);
-        setGasEstimate(gasEstimate);
-        setIsEstimatingGas(false);
-      } catch (error) {
-        console.error('Error estimating gas:', error);
-        setIsEstimatingGas(false);
-        // Don't throw error here, just log it - gas estimation will happen again during deployment
-      }
+      // Start gas estimation in background without blocking the button
+      estimateGasInBackground(walletName, keys.privateKey);
     } else {
       console.log('CreateWallet - No wallet name, skipping gas estimation');
+    }
+  };
+
+  const estimateGasInBackground = async (name: string, privateKey: string) => {
+    try {
+      setIsEstimatingGas(true);
+      console.log('CreateWallet - Starting background gas estimation...');
+      const gasEstimate = await estimateWalletCreationGas(name, privateKey);
+      console.log('CreateWallet - Background gas estimation complete:', gasEstimate);
+      setGasEstimate(gasEstimate);
+      setIsEstimatingGas(false);
+    } catch (error) {
+      console.error('Error in background gas estimation:', error);
+      setIsEstimatingGas(false);
+      // Don't throw error here, just log it - gas estimation will happen again during deployment
     }
   };
 
@@ -199,6 +205,7 @@ const CreateWallet = () => {
         setIsFunding(false);
 
         // Step 3: Deploy the smart contract wallet
+        setIsCreatingWallet(true);
         const contractAddress = await deploySmartContractWallet(walletName, walletKeys.privateKey);
         
         // Validate the deployed contract address
@@ -245,6 +252,7 @@ const CreateWallet = () => {
         setIsSaving(false);
         setIsEstimatingGas(false);
         setIsFunding(false);
+        setIsCreatingWallet(false);
       }
     } else {
       setStep(Math.min(5, step + 1));
@@ -358,15 +366,54 @@ const CreateWallet = () => {
           </Button>
           <Button
             onClick={handleContinue}
-            disabled={!canContinue() || isSaving || isEstimatingGas || isFunding}
+            disabled={(() => {
+              // For step 2 (Key Generation), don't require gas estimation to be complete
+              const requiresGasEstimation = step === 5; // Only step 5 (Complete) requires gas estimation
+              const disabled = !canContinue() || isSaving || (requiresGasEstimation && isEstimatingGas) || isFunding || isCreatingWallet;
+              console.log('CreateWallet - Button disabled state:', {
+                step,
+                canContinue: canContinue(),
+                isSaving,
+                isEstimatingGas,
+                isFunding,
+                isCreatingWallet,
+                requiresGasEstimation,
+                disabled
+              });
+              return disabled;
+            })()}
             className="bg-gradient-primary hover:opacity-90"
           >
             {isSaving ? (
-              isEstimatingGas ? 'Estimating Gas...' : 
-              isFunding ? 'Funding Wallet...' : 
-              'Creating Wallet...'
-            ) : step === 5 ? 'Create Wallet' : 'Continue'}
-            <ArrowRight className="w-4 h-4 ml-2" />
+              isEstimatingGas ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Estimating Gas...
+                </>
+              ) : 
+              isFunding ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Funding Wallet...
+                </>
+              ) : 
+              isCreatingWallet ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Creating Wallet...
+                </>
+              ) : (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Creating Wallet...
+                </>
+              )
+            ) : (
+              <>
+                {step === 5 ? 'Create Wallet' : 'Continue'}
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </>
+            )}
           </Button>
         </div>
       </div>
