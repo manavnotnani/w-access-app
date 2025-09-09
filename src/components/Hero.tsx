@@ -102,12 +102,6 @@ const Hero = () => {
                 key={i}
                 className="flex items-center gap-2 bg-card/50 backdrop-blur-fallback px-3 sm:px-4 py-2 sm:py-3 rounded-full border border-border"
                 variants={childVariants}
-                whileHover={{
-                  y: -3,
-                  backgroundColor: "rgba(255, 255, 255, 0.08)",
-                  borderColor: "rgba(245, 180, 0, 0.5)",
-                }}
-                transition={{ type: "spring", stiffness: 300 }}
               >
                 <span className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0">{feature.icon}</span>
                 <span className="text-xs sm:text-sm font-medium whitespace-nowrap">{feature.text}</span>
