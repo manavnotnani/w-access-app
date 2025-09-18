@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,23 +6,64 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Search, Plus, Settings, ExternalLink, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { Search, Plus, Settings, ExternalLink, CheckCircle, Clock, AlertCircle, Loader2 } from "lucide-react";
+import { walletService } from "@/lib/database";
+import { useToast } from "@/hooks/use-toast";
+
+interface ExistingName {
+  name: string;
+  address: string;
+  status: string;
+  expires: string;
+  primary: boolean;
+  created_at: string;
+}
 
 const NameService = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedName, setSelectedName] = useState("");
-
-  const myNames = [
-    { name: "alice.w-chain", address: "0x1234...5678", status: "active", expires: "365 days", primary: true },
-    { name: "alice-work.w-chain", address: "0x8765...4321", status: "active", expires: "290 days", primary: false },
-    { name: "alice-crypto.w-chain", address: "0x9876...1234", status: "pending", expires: "---", primary: false },
-  ];
+  const [existingNames, setExistingNames] = useState<ExistingName[]>([]);
+  const [loadingNames, setLoadingNames] = useState(true);
+  const { toast } = useToast();
 
   const searchResults = [
     { name: "alice-dev.w-chain", status: "available", price: "10 W-CHAIN" },
     { name: "alice-nft.w-chain", status: "available", price: "15 W-CHAIN" },
     { name: "alice-defi.w-chain", status: "taken", owner: "0x1111...2222" },
   ];
+
+  // Fetch existing names from database
+  useEffect(() => {
+    const fetchExistingNames = async () => {
+      try {
+        setLoadingNames(true);
+        const wallets = await walletService.getAllWallets();
+        
+        // Transform wallet data to match the existing format
+        const names: ExistingName[] = wallets.map((wallet, index) => ({
+          name: `${wallet.name}.w-chain`,
+          address: wallet.address,
+          status: "active", // All registered names are considered active
+          expires: "365 days", // Default expiration (this could be enhanced later)
+          primary: index === 0, // First wallet is considered primary
+          created_at: wallet.created_at
+        }));
+        
+        setExistingNames(names);
+      } catch (error) {
+        console.error("Error fetching existing names:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load existing names from database.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingNames(false);
+      }
+    };
+
+    fetchExistingNames();
+  }, [toast]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -55,92 +96,42 @@ const NameService = () => {
           <p className="text-muted-foreground">Register and manage human-readable addresses on W-Chain</p>
         </div>
 
-        {/* Search Section */}
-        <Card className="border-primary/20 mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Search className="w-5 h-5 mr-2" />
-              Search Names
-            </CardTitle>
-            <CardDescription>Find and register available W-Chain names</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <Label htmlFor="search">Search for a name</Label>
-                <div className="flex mt-1">
-                  <Input
-                    id="search"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Enter name"
-                    className="rounded-r-none"
-                  />
-                  <div className="px-3 py-2 bg-muted border border-l-0 rounded-r-md text-sm text-muted-foreground">
-                    .w-chain
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-end">
-                <Button className="bg-gradient-primary hover:opacity-90">
-                  <Search className="w-4 h-4 mr-2" />
-                  Search
-                </Button>
-              </div>
-            </div>
 
-            {searchQuery && (
-              <div className="mt-6 space-y-3">
-                {searchResults.map((result, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg bg-background/50">
-                    <div className="flex items-center gap-3">
-                      {getStatusIcon(result.status)}
-                      <div>
-                        <div className="font-medium">{result.name}</div>
-                        <div className={`text-sm ${getStatusColor(result.status)}`}>
-                          {result.status === "taken" ? `Owned by ${result.owner}` : result.status}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {result.status === "available" && (
-                        <>
-                          <Badge variant="outline">{result.price}</Badge>
-                          <Button size="sm" className="bg-gradient-primary hover:opacity-90">
-                            Register
-                          </Button>
-                        </>
-                      )}
-                      {result.status === "taken" && (
-                        <Button variant="outline" size="sm">
-                          Make Offer
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
         {/* Main Content */}
-        <Tabs defaultValue="my-names" className="space-y-6">
+        <Tabs defaultValue="existing-names" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="my-names">My Names</TabsTrigger>
+            <TabsTrigger value="existing-names">Existing Names</TabsTrigger>
             <TabsTrigger value="register">Register New</TabsTrigger>
             <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="my-names" className="space-y-6">
+          <TabsContent value="existing-names" className="space-y-6">
             <Card className="border-primary/20">
               <CardHeader>
-                <CardTitle>Your Registered Names</CardTitle>
-                <CardDescription>Manage your W-Chain names and settings</CardDescription>
+                <CardTitle>Existing Registered Names</CardTitle>
+                <CardDescription>All registered W-Chain names in the system</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {myNames.map((name, index) => (
+                {loadingNames ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                    <span>Loading existing names...</span>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {existingNames.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="w-16 h-16 mx-auto bg-gradient-primary rounded-full flex items-center justify-center mb-4">
+                          <Search className="w-8 h-8 text-white" />
+                        </div>
+                        <h3 className="text-xl font-semibold mb-2">No Names Found</h3>
+                        <p className="text-muted-foreground">
+                          No registered names found in the system yet.
+                        </p>
+                      </div>
+                    ) : (
+                      existingNames.map((name, index) => (
                     <div key={index} className="p-4 border rounded-lg bg-background/50">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
@@ -153,28 +144,18 @@ const NameService = () => {
                             <div className="text-sm text-muted-foreground">{name.address}</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm">
-                            <Settings className="w-4 h-4" />
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <ExternalLink className="w-4 h-4" />
-                          </Button>
-                        </div>
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">
-                          {name.status === "active" ? `Expires in ${name.expires}` : "Registration pending"}
+                          {name.status === "active" ? `` : "Registration pending"}
                         </span>
-                        {name.status === "active" && (
-                          <Button variant="outline" size="sm">
-                            Renew
-                          </Button>
-                        )}
+                        {name.status === "active" }
                       </div>
                     </div>
-                  ))}
-                </div>
+                      ))
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
