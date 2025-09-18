@@ -10,11 +10,13 @@ import { KeyGenerationStep } from "@/components/wallet/KeyGenerationStep";
 import { SeedPhraseStep } from "@/components/wallet/SeedPhraseStep";
 import { VerificationStep } from "@/components/wallet/VerificationStep";
 import { CompleteStep } from "@/components/wallet/CompleteStep";
+import { RememberDeviceModal } from "@/components/RememberDeviceModal";
 import { walletService } from "@/lib/database";
 import { useToast } from "@/hooks/use-toast";
 import { WalletKeys, CryptoService } from "@/lib/crypto";
 import { deploySmartContractWallet, estimateWalletCreationGas, GasEstimate } from "@/lib/utils";
 import { FundingService } from "@/lib/funding";
+import { KeyManagementService } from "@/lib/key-management";
 
 
 const CreateWallet = () => {
@@ -30,6 +32,8 @@ const CreateWallet = () => {
   const [isEstimatingGas, setIsEstimatingGas] = useState(false);
   const [isFunding, setIsFunding] = useState(false);
   const [isCreatingWallet, setIsCreatingWallet] = useState(false);
+  const [showRememberDeviceModal, setShowRememberDeviceModal] = useState(false);
+  const [createdWalletId, setCreatedWalletId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -126,6 +130,33 @@ const CreateWallet = () => {
 
   const handleKeyGenerationError = (error: string) => {
     setKeyGenerationError(error);
+  };
+
+  const handleRememberDeviceConfirm = async (pin: string, rememberDevice: boolean) => {
+    try {
+      if (rememberDevice && walletKeys && createdWalletId) {
+        // Store encrypted keys for long-term storage
+        await KeyManagementService.storeEncryptedKeys(createdWalletId, walletKeys, pin);
+        toast({
+          title: "Device Storage Enabled",
+          description: "Your wallet will be remembered on this device. You can change this setting later in wallet settings.",
+        });
+      }
+      
+      // Close modal and navigate to security setup
+      setShowRememberDeviceModal(false);
+      navigate("/security-setup");
+    } catch (error) {
+      console.error("Error setting up device storage:", error);
+      toast({
+        title: "Error",
+        description: "Failed to set up device storage. You can configure this later in wallet settings.",
+        variant: "destructive",
+      });
+      // Still navigate to security setup even if device storage fails
+      setShowRememberDeviceModal(false);
+      navigate("/security-setup");
+    }
   };
 
   // Re-estimate gas when wallet name changes (if keys are already generated)
@@ -232,11 +263,19 @@ const CreateWallet = () => {
         const savedWallet = await walletService.createWallet(walletData);
         
         if (savedWallet) {
+          // Store wallet keys securely for transaction signing
+          KeyManagementService.storeWalletKeys(savedWallet.id, walletKeys);
+          
+          // Store the wallet ID for the remember device modal
+          setCreatedWalletId(savedWallet.id);
+          
           toast({
             title: "Wallet Created Successfully!",
             description: `Wallet "${walletName}.w-chain" (${contractAddress.slice(0, 8)}...${contractAddress.slice(-6)}) has been created and deployed to the blockchain.`,
           });
-          navigate("/security-setup");
+          
+          // Show remember device modal before proceeding
+          setShowRememberDeviceModal(true);
         } else {
           throw new Error("Failed to save wallet to database");
         }
@@ -417,6 +456,18 @@ const CreateWallet = () => {
           </Button>
         </div>
       </div>
+
+      {/* Remember Device Modal */}
+      <RememberDeviceModal
+        isOpen={showRememberDeviceModal}
+        onClose={() => {
+          setShowRememberDeviceModal(false);
+          navigate("/security-setup");
+        }}
+        onConfirm={handleRememberDeviceConfirm}
+        walletName={walletName}
+        isLoading={false}
+      />
     </div>
   );
 };
