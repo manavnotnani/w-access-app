@@ -39,6 +39,12 @@ export interface FundingResult {
   error?: string;
 }
 
+export interface RelayResult {
+  success: boolean;
+  transactionHash?: string;
+  error?: string;
+}
+
 export class FundingService {
   private static serverAccount = (() => {
     try {
@@ -259,5 +265,66 @@ export class FundingService {
    */
   static getRecommendedFundingAmount(): string {
     return "0.32"; // 0.32 WCO
+  }
+
+  /**
+   * Relay a raw transaction from the server account (gas sponsor)
+   */
+  static async relayTransaction(params: {
+    to: `0x${string}`;
+    data: `0x${string}`;
+    value?: bigint;
+    gas?: bigint;
+    gasPrice?: bigint;
+  }): Promise<RelayResult> {
+    try {
+      const { to, data } = params;
+      const value = params.value ?? 0n;
+
+      // Resolve gas price
+      const gasPrice = params.gasPrice ?? (await this.publicClient.getGasPrice());
+
+      // Estimate gas if not provided
+      const gas = params.gas ?? (await this.publicClient.estimateGas({
+        account: this.serverAccount.address,
+        to,
+        data,
+        value,
+      }));
+
+      // Ensure server has enough balance for gas + value
+      const gasCost = gas * gasPrice;
+      const serverBalance = await this.publicClient.getBalance({ address: this.serverAccount.address });
+      if (serverBalance < gasCost + value) {
+        return { success: false, error: `Relayer insufficient balance. Needed: ${formatEther(gasCost + value)} WCO, Available: ${formatEther(serverBalance)} WCO` };
+      }
+
+      // Nonce for server account
+      const nonce = await this.publicClient.getTransactionCount({
+        address: this.serverAccount.address,
+        blockTag: 'pending'
+      });
+
+      // Build legacy tx (chain uses legacy gasPrice per current setup)
+      const tx = {
+        chainId: Number(activeChain.id),
+        to,
+        data,
+        value,
+        gas,
+        gasPrice,
+        nonce: Number(nonce),
+      } as const;
+
+      // Sign & send
+      const signed = await this.serverAccount.signTransaction(tx);
+      const hash = await this.publicClient.sendRawTransaction({ serializedTransaction: signed });
+      await this.publicClient.waitForTransactionReceipt({ hash });
+
+      return { success: true, transactionHash: hash };
+    } catch (error) {
+      console.error('Error relaying transaction:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to relay transaction' };
+    }
   }
 }

@@ -85,6 +85,22 @@ export const walletService = {
     return data || []
   },
 
+  // Get wallet by ID
+  async getWalletById(walletId: string): Promise<Wallet | null> {
+    const { data, error } = await supabase
+      .from('wallets')
+      .select('*')
+      .eq('id', walletId)
+      .single()
+    
+    if (error) {
+      console.error('Error fetching wallet by ID:', error)
+      return null
+    }
+    
+    return data
+  },
+
   // Get wallets for current session
   async getWalletsBySession(): Promise<Wallet[]> {
     if (DEVELOPMENT_MODE) {
