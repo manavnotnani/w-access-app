@@ -159,12 +159,12 @@ export class FundingService {
     try {
       // Check if server has sufficient balance
       const hasBalance = await this.hasSufficientBalance(amount);
-    //   if (!hasBalance) {
-    //     return {
-    //       success: false,
-    //       error: "Server account has insufficient balance for funding"
-    //     };
-    //   }
+      if (!hasBalance) {
+        return {
+          success: false,
+          error: `Relayer has insufficient funds to sponsor gas. Please fund your wallet directly with at least ${amount} WCO, or top up the relayer account (${this.getServerAddress()}).`
+        };
+      }
 
       // Get nonce for the transaction
       const nonce = await this.publicClient.getTransactionCount({
@@ -208,7 +208,18 @@ export class FundingService {
       console.error("Error funding wallet:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fund wallet"
+        error: (() => {
+          const message = error instanceof Error ? error.message : "Failed to fund wallet";
+          // Normalize common provider errors into a user-friendly message
+          if (message.toLowerCase().includes("insufficient funds for gas")) {
+            return `Relayer has insufficient funds to sponsor gas. Please fund your wallet directly with at least ${amount} WCO, or try again later.`;
+          }
+          if (message.toLowerCase().includes("not a valid request object")) {
+            // viem sometimes wraps JSON-RPC insufficient funds errors with this text
+            return `Relayer error: out of funds to cover gas. Please fund your wallet directly with at least ${amount} WCO and retry.`;
+          }
+          return message;
+        })()
       };
     }
   }

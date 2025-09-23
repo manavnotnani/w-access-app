@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { WalletNameStep } from "@/components/wallet/WalletNameStep";
 import { KeyGenerationStep } from "@/components/wallet/KeyGenerationStep";
 import { SeedPhraseStep } from "@/components/wallet/SeedPhraseStep";
@@ -34,6 +35,7 @@ const CreateWallet = () => {
   const [isCreatingWallet, setIsCreatingWallet] = useState(false);
   const [showRememberDeviceModal, setShowRememberDeviceModal] = useState(false);
   const [createdWalletId, setCreatedWalletId] = useState<string | null>(null);
+  const [banner, setBanner] = useState<{ title: string; description: string } | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -216,7 +218,22 @@ const CreateWallet = () => {
         const fundingResult = await FundingService.fundWalletForGas(walletKeys.address, currentGasEstimate.gasCostInWCO);
         
         if (!fundingResult.success) {
-          throw new Error(`Failed to fund wallet: ${fundingResult.error}`);
+          const requiredAmount = (parseFloat(currentGasEstimate.gasCostInWCO) * 1.1).toFixed(6);
+          const errorText = fundingResult.error?.toLowerCase() || "";
+          const relayerInsufficient = errorText.includes("relayer has insufficient funds");
+          if (relayerInsufficient) {
+            const title = "Relayer needs funds";
+            const description = `Our gas sponsor is low. Send at least ${requiredAmount} WCO to your new wallet address (${walletKeys.address}) to proceed, or try again later.`;
+            setBanner({ title, description });
+          } else {
+            toast({
+              title: "Funding Failed",
+              description: fundingResult.error || "Failed to fund wallet",
+            });
+          }
+          setIsFunding(false);
+          setIsSaving(false);
+          return;
         }
 
         // Show appropriate message based on funding result
@@ -363,6 +380,21 @@ const CreateWallet = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {banner && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full px-4 sm:px-0">
+          <div className="mx-auto max-w-2xl">
+            <Alert className="bg-background border border-primary/30 shadow-2xl rounded-lg">
+              <AlertDescription className="flex justify-between items-start gap-4">
+                <div>
+                  <div className="font-semibold text-center sm:text-left">{banner.title}</div>
+                  <div className="text-sm opacity-90 text-center sm:text-left">{banner.description}</div>
+                </div>
+                <Button variant="ghost" size="sm" className="-m-2" onClick={() => setBanner(null)}>Dismiss</Button>
+              </AlertDescription>
+            </Alert>
+          </div>
+        </div>
+      )}
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         {/* Progress Header */}
         <div className="mb-8">
