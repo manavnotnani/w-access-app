@@ -87,7 +87,6 @@ const CreateWallet = () => {
     { id: 2, title: "Generate Keys", description: "Create secure wallet keys" },
     { id: 3, title: "Backup Phrase", description: "Save your recovery phrase" },
     { id: 4, title: "Verify Backup", description: "Confirm your backup" },
-    { id: 5, title: "Complete", description: "Wallet ready to use" }
   ];
 
   const currentStep = steps.find(s => s.id === step);
