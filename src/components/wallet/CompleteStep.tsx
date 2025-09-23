@@ -142,8 +142,8 @@ export const CompleteStep = ({ walletName, walletAddress, gasEstimate, isEstimat
         <div className="w-16 h-16 mx-auto bg-gradient-primary rounded-full flex items-center justify-center">
           <CheckCircle className="w-8 h-8 text-white" />
         </div>
-        <h2 className="text-2xl font-bold">Wallet Created Successfully!</h2>
-        <p className="text-muted-foreground">Your W-Access wallet is ready to use</p>
+        <h2 className="text-2xl font-bold">Almost there!</h2>
+        <p className="text-muted-foreground">Your W-Access wallet will be ready to use in a few seconds</p>
       </div>
 
       <Card className="border-primary/20 bg-gradient-subtle">
