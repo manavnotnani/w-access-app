@@ -1,73 +1,385 @@
-# Welcome to your Lovable project
+# W-Access
 
-## Project info
+A comprehensive Web3 wallet management platform built specifically for the W-Chain ecosystem. W-Access simplifies wallet creation, management, and transactions while providing enterprise-grade security and user-friendly features.
 
-**URL**: https://lovable.dev/projects/c2bb463d-37fc-4210-8183-24726fb45bfc
+## 🚀 Features
 
-## How can I edit this code?
+### Core Features
+- **Smart Contract Wallets**: Non-custodial wallet creation using EIP-1167 minimal proxies
+- **Human-Readable Names**: W-Chain Name Service (WNS) for memorable wallet addresses
+- **Secure Recovery**: Social recovery system with guardian-based wallet recovery
+- **PIN Authentication**: Secure PIN-based access without exposing private keys
+- **Transaction Sponsorship**: Automatic gas fee sponsorship for expensive transactions
+- **Session Management**: Secure session-based wallet access with automatic expiration
 
-There are several ways of editing your application.
+### User Experience
+- **Instant Wallet Creation**: Create wallets in seconds with streamlined onboarding
+- **Mobile Optimized**: Responsive design for all devices
+- **Real-time Balance**: Live wallet balance updates
+- **Transaction History**: Complete transaction tracking and history
+- **Multi-wallet Support**: Manage multiple wallets in a single interface
 
-**Use Lovable**
+### Security Features
+- **Non-custodial**: Users maintain full control of their private keys
+- **Encrypted Storage**: PIN-encrypted long-term key storage
+- **Session Security**: Automatic key expiration and cleanup
+- **Social Recovery**: Guardian-based wallet recovery system
+- **Enterprise Security**: Advanced security features for team management
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/c2bb463d-37fc-4210-8183-24726fb45bfc) and start prompting.
+## 🏗️ Architecture
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        UI[React Frontend]
+        COMP[Components]
+        PAGES[Pages]
+        HOOKS[Custom Hooks]
+    end
+    
+    subgraph "Service Layer"
+        TS[Transaction Service]
+        KS[Key Management Service]
+        WS[Wallet Service]
+        FS[Funding Service]
+        NS[Name Service]
+    end
+    
+    subgraph "Blockchain Layer"
+        SC[Smart Contracts]
+        WF[Wallet Factory]
+        WI[Wallet Implementation]
+        WNS[WNS Registry]
+        RM[Recovery Manager]
+    end
+    
+    subgraph "Infrastructure"
+        SB[Supabase Database]
+        SESSION[Session Storage]
+        LOCAL[Local Storage]
+        RELAY[Transaction Relayer]
+    end
+    
+    subgraph "W-Chain Network"
+        CHAIN[W-Chain Testnet/Mainnet]
+        EXPLORER[Block Explorer]
+    end
+    
+    UI --> COMP
+    COMP --> PAGES
+    PAGES --> HOOKS
+    
+    UI --> TS
+    UI --> KS
+    UI --> WS
+    UI --> FS
+    UI --> NS
+    
+    TS --> SC
+    WS --> SC
+    NS --> SC
+    FS --> SC
+    
+    SC --> WF
+    SC --> WI
+    SC --> WNS
+    SC --> RM
+    
+    WS --> SB
+    KS --> SESSION
+    KS --> LOCAL
+    FS --> RELAY
+    
+    SC --> CHAIN
+    CHAIN --> EXPLORER
+    RELAY --> CHAIN
 ```
 
-**Edit a file directly in GitHub**
+## 📁 Project Structure
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```
+w-access/
+├── src/
+│   ├── components/           # React components
+│   │   ├── ui/              # Reusable UI components
+│   │   ├── wallet/          # Wallet-specific components
+│   │   └── *.tsx            # Feature components
+│   ├── pages/               # Application pages
+│   ├── lib/                 # Core services and utilities
+│   │   ├── abi/             # Smart contract ABIs
+│   │   ├── addresses.ts     # Contract addresses
+│   │   ├── crypto.ts        # Cryptographic utilities
+│   │   ├── database.ts      # Database operations
+│   │   ├── eth.ts           # Ethereum utilities
+│   │   ├── funding.ts       # Wallet funding service
+│   │   ├── key-management.ts # Key storage and encryption
+│   │   ├── name-resolution.ts # WNS resolution
+│   │   ├── session.ts       # Session management
+│   │   ├── supabase.ts      # Supabase client
+│   │   └── transaction.ts   # Transaction handling
+│   ├── hooks/               # Custom React hooks
+│   ├── contracts/           # Smart contract source code
+│   └── App.tsx              # Main application component
+├── public/                  # Static assets
+├── supabase/                # Supabase configuration
+└── dist/                    # Build output
+```
 
-**Use GitHub Codespaces**
+## 🛠️ Technology Stack
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Frontend
+- **React 18** - Modern React with hooks and functional components
+- **TypeScript** - Type-safe development
+- **Vite** - Fast build tool and development server
+- **Tailwind CSS** - Utility-first CSS framework
+- **Framer Motion** - Smooth animations and transitions
+- **Radix UI** - Accessible component primitives
+- **React Router** - Client-side routing
 
-## What technologies are used for this project?
+### Blockchain
+- **Viem** - Type-safe Ethereum library
+- **Ethers.js** - Ethereum utilities
+- **Solidity 0.8.3** - Smart contract development
+- **EIP-1167** - Minimal proxy standard for gas-efficient wallet creation
 
-This project is built with:
+### Backend & Infrastructure
+- **Supabase** - PostgreSQL database and real-time subscriptions
+- **Web Crypto API** - Client-side encryption
+- **Session Storage** - Secure temporary key storage
+- **Local Storage** - Encrypted long-term key storage
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🚀 Getting Started
 
-## How can I deploy this project?
+### Prerequisites
 
-Simply open [Lovable](https://lovable.dev/projects/c2bb463d-37fc-4210-8183-24726fb45bfc) and click on Share -> Publish.
+- Node.js 18+ 
+- npm or yarn
+- Git
 
-## Can I connect a custom domain to my Lovable project?
+### Installation
 
-Yes, you can!
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-org/w-access.git
+   cd w-access
+   ```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+3. **Environment Setup**
+   ```bash
+   cp env.example .env
+   ```
+   
+   Configure the following environment variables:
+   ```env
+   # Supabase Configuration
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   
+   # Server Configuration (for wallet funding)
+   VITE_SERVER_PRIVATE_KEY=your_server_private_key
+   ```
+
+4. **Database Setup**
+   
+   Run the Supabase setup script:
+   ```bash
+   # Execute the SQL schema in your Supabase dashboard
+   cat src/lib/supabase-setup.sql
+   ```
+
+5. **Start Development Server**
+   ```bash
+   npm run dev
+   ```
+
+6. **Build for Production**
+   ```bash
+   npm run build
+   ```
+
+## 📋 Smart Contracts
+
+### Wallet Factory (`0x52d50D41FABB1A2C3434cA79d9a3963D9140C7De`)
+- Creates new smart contract wallets using EIP-1167 minimal proxies
+- Manages wallet initialization and ownership
+- Provides deterministic address prediction
+
+### Wallet Implementation (`0x440Df1c316041B15F08298Da6c267B38Dcd3aE7c`)
+- Core wallet functionality with EIP-1271 signature validation
+- Social recovery system with guardian management
+- Batch transaction execution
+- Nonce-based transaction ordering
+
+### WNS Registry (`0x269ca8D0fB38Fe18435B2AC70911487ED340B2F3`)
+- Human-readable name registration and resolution
+- Name-to-address and address-to-name mapping
+- Name transfer and update functionality
+
+### Recovery Manager (`0x7C2930C0AA1E7A17694EdF82e6d1Ae4E6ef3f607`)
+- Manages social recovery processes
+- Guardian coordination and recovery execution
+- Recovery cooldown and security features
+
+## 🔐 Security Features
+
+### Key Management
+- **Session Storage**: Temporary key storage with 30-minute expiration
+- **PIN Encryption**: AES-GCM encryption with PBKDF2 key derivation
+- **Automatic Cleanup**: Expired keys are automatically removed
+- **No Server Storage**: Private keys never leave the client
+
+### Transaction Security
+- **Signature Validation**: EIP-1271 compliant signature verification
+- **Nonce Management**: Prevents replay attacks
+- **Gas Price Protection**: Prevents gas price manipulation
+- **Transaction Sponsorship**: Automatic gas fee handling
+
+### Recovery System
+- **Guardian-based Recovery**: Social recovery with trusted guardians
+- **Cooldown Period**: 2-day cooldown for recovery initiation
+- **Multi-signature Support**: Multiple guardian approval system
+- **Recovery Cancellation**: Owner can cancel pending recoveries
+
+## 🔄 Transaction Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant TS as Transaction Service
+    participant SC as Smart Contract
+    participant R as Relayer
+    participant C as W-Chain
+    
+    U->>F: Initiate Transaction
+    F->>TS: Send Transaction Request
+    TS->>TS: Validate Parameters
+    TS->>TS: Get Wallet Private Key
+    TS->>TS: Generate Signature
+    TS->>SC: Create Execute Transaction
+    TS->>R: Relay Transaction
+    R->>C: Submit to Network
+    C-->>R: Transaction Receipt
+    R-->>TS: Success Response
+    TS-->>F: Transaction Hash
+    F-->>U: Transaction Confirmed
+```
+
+## 🎯 Key Services
+
+### TransactionService
+Handles all blockchain transactions with smart contract wallets:
+- Gas price optimization
+- Transaction sponsorship
+- Signature generation
+- Error handling and retry logic
+
+### KeyManagementService
+Manages wallet keys securely:
+- Session-based temporary storage
+- PIN-encrypted long-term storage
+- Automatic key expiration
+- Secure key derivation
+
+### WalletService
+Database operations for wallet management:
+- Wallet creation and retrieval
+- Session-based wallet association
+- Recovery method management
+- Wallet statistics
+
+### FundingService
+Handles wallet funding and gas sponsorship:
+- Automatic wallet funding
+- Gas fee sponsorship
+- Server balance management
+- Transaction relaying
+
+## 📊 Database Schema
+
+### Wallets Table
+```sql
+CREATE TABLE wallets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID,
+  session_id UUID,
+  name VARCHAR(255) NOT NULL,
+  address VARCHAR(42) NOT NULL UNIQUE,
+  seed_phrase_hash VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### Recovery Methods Table
+```sql
+CREATE TABLE recovery_methods (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  wallet_id UUID REFERENCES wallets(id) ON DELETE CASCADE,
+  type VARCHAR(50) NOT NULL,
+  value VARCHAR(255) NOT NULL,
+  is_verified BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+## 🚀 Deployment
+
+### Vercel Deployment
+1. Connect your GitHub repository to Vercel
+2. Configure environment variables in Vercel dashboard
+3. Deploy automatically on push to main branch
+
+### Manual Deployment
+1. Build the application: `npm run build`
+2. Upload the `dist` folder to your hosting provider
+3. Configure environment variables
+4. Set up Supabase database
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+For support and questions:
+- Create an issue in the GitHub repository
+- Check the documentation in the `/docs` folder
+- Review the smart contract documentation
+
+## 🔮 Roadmap
+
+### Phase 1 (Current)
+- ✅ Smart contract wallet creation
+- ✅ Basic transaction functionality
+- ✅ PIN-based authentication
+- ✅ Session management
+
+### Phase 2 (In Progress)
+- 🔄 Enhanced recovery system
+- 🔄 Multi-signature support
+- 🔄 Advanced security features
+- 🔄 Mobile app development
+
+### Phase 3 (Planned)
+- 📋 DeFi integration
+- 📋 NFT support
+- 📋 Cross-chain functionality
+- 📋 Enterprise features
+
+---
+
+**Built with ❤️ for the W-Chain ecosystem**
