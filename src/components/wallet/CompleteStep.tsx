@@ -132,9 +132,6 @@ export const CompleteStep = ({ walletName, walletAddress, gasEstimate, isEstimat
     }
   };
 
-  const displayAddress = walletAddress 
-    ? `${walletAddress.slice(0, 8)}...${walletAddress.slice(-6)}`
-    : "0x1234...5678";
 
   return (
     <div className="space-y-6">
@@ -151,19 +148,6 @@ export const CompleteStep = ({ walletName, walletAddress, gasEstimate, isEstimat
           <div className="space-y-4">
             <div className="text-center">
               <div className="text-lg font-semibold text-primary whitespace-nowrap">{walletName}.w-chain</div>
-              <div className="flex items-center justify-center gap-2 mt-2">
-                <div className="text-sm text-muted-foreground font-mono">{displayAddress}</div>
-                {walletAddress && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleCopyAddress}
-                    className="h-6 w-6 p-0"
-                  >
-                    <Copy className="w-3 h-3" />
-                  </Button>
-                )}
-              </div>
             </div>
             <div className="flex justify-center gap-2 flex-wrap">
               <Badge variant="secondary">✓ Secure</Badge>
@@ -287,7 +271,7 @@ export const CompleteStep = ({ walletName, walletAddress, gasEstimate, isEstimat
                         <div className="space-y-3">
                           <div className="bg-muted/50 p-3 rounded-lg text-sm space-y-2">
                             <p>
-                              Server balance is low. Please fund your wallet directly to proceed. Send at least
+                              Server balance is low. Please temporarily fund this wallet to proceed with creation. Send at least
                               <span className="font-semibold"> {fundingStatus.fundingAmount} WCO </span>
                               to the address below:
                             </p>
@@ -334,14 +318,7 @@ export const CompleteStep = ({ walletName, walletAddress, gasEstimate, isEstimat
       <Alert>
         <Shield className="h-4 w-4" />
         <AlertDescription>
-          Your wallet has been created with military-grade security and stored securely in our database. 
-          {walletAddress && (
-            <span className="block mt-2 text-xs">
-              <strong>Wallet Address:</strong> 
-              <span className="hidden sm:inline"> {walletAddress}</span>
-              <span className="sm:hidden"> {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
-            </span>
-          )}
+          Your wallet is being created with bank-level security and stored securely on the blockchain.
         </AlertDescription>
       </Alert>
     </div>
