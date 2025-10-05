@@ -21,12 +21,6 @@ export const CompleteStep = ({ walletName, walletAddress, gasEstimate, isEstimat
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   const { toast } = useToast();
 
-  console.log('CompleteStep - Props received:', {
-    walletName,
-    walletAddress,
-    gasEstimate,
-    isEstimatingGas
-  });
 
   useEffect(() => {
     if (walletAddress) {
@@ -37,7 +31,6 @@ export const CompleteStep = ({ walletName, walletAddress, gasEstimate, isEstimat
   // Fallback: If we don't have a gas estimate but have wallet name and address, estimate gas
   useEffect(() => {
     if (walletAddress && walletName && !gasEstimate && !isEstimatingGas) {
-      console.log('CompleteStep - Fallback: Estimating gas because gasEstimate is null');
       // We can't estimate gas here because we don't have the private key
       // This is just for debugging - the real fix is in CreateWallet
     }
@@ -51,17 +44,10 @@ export const CompleteStep = ({ walletName, walletAddress, gasEstimate, isEstimat
       // Use gas estimate amount if available, otherwise use default
       const fundingAmount = gasEstimate ? (parseFloat(gasEstimate.gasCostInWCO) * 1.1).toFixed(6) : "0.32";
       
-      console.log('CompleteStep - checkFundingStatus:', {
-        gasEstimate,
-        gasCostInWCO: gasEstimate?.gasCostInWCO,
-        fundingAmount,
-        walletAddress
-      });
       
       const status = await FundingService.getFundingStatus(walletAddress, fundingAmount);
       setFundingStatus(status);
     } catch (error) {
-      console.error('Error checking funding status:', error);
       toast({
         title: "Error",
         description: "Failed to check funding status",
@@ -102,7 +88,6 @@ export const CompleteStep = ({ walletName, walletAddress, gasEstimate, isEstimat
         });
       }
     } catch (error) {
-      console.error('Error funding wallet:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred while funding the wallet",
@@ -122,7 +107,6 @@ export const CompleteStep = ({ walletName, walletAddress, gasEstimate, isEstimat
           description: "Wallet address copied to clipboard",
         });
       } catch (error) {
-        console.error('Failed to copy address:', error);
         toast({
           title: "Error",
           description: "Failed to copy address",

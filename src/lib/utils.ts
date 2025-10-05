@@ -69,7 +69,6 @@ export const estimateWalletCreationGas = async (name: string, privateKey: string
     // Create a wallet from the private key
     const account = privateKeyToAccount(privateKey as `0x${string}`);
     
-    console.log(`Estimating gas for wallet creation: ${account.address}`);
     
     // Estimate gas for the createWallet function call with fallback
     let estimatedGas: bigint;
@@ -83,10 +82,8 @@ export const estimateWalletCreationGas = async (name: string, privateKey: string
         args: [name],
         account: account.address,
       });
-      console.log(`Gas estimated via RPC: ${estimatedGas}`);
     } catch (error) {
       // Fallback to a reasonable estimate if RPC estimation fails
-      console.warn('RPC gas estimation failed, using fallback estimate:', error);
       
       // For a simple proxy deployment + initialization, this should be sufficient
       // But we're seeing high gas usage, so let's be more generous
@@ -100,13 +97,11 @@ export const estimateWalletCreationGas = async (name: string, privateKey: string
       const initializationGas = 50000n; // Initialize function call with buffer
       
       estimatedGas = baseGas + contractCreationGas + stringStorageGas + initializationGas;
-      console.log(`Using fallback gas estimate: ${estimatedGas} (base: ${baseGas}, creation: ${contractCreationGas}, string: ${stringStorageGas}, init: ${initializationGas})`);
     }
 
     // Add 20% buffer to gas estimate for safety
     const gasWithBuffer = (estimatedGas * 120n) / 100n;
     
-    console.log(`Gas estimation: ${estimatedGas} (with buffer: ${gasWithBuffer})`);
     
     // Get gas price with EIP-1559 optimization if available
     let gasPrice: bigint;
@@ -116,29 +111,23 @@ export const estimateWalletCreationGas = async (name: string, privateKey: string
       const feeData = await publicClient.estimateFeesPerGas();
       if (feeData.maxFeePerGas && feeData.maxPriorityFeePerGas) {
         gasPrice = feeData.maxFeePerGas; // Use maxFeePerGas for cost calculation
-        console.log(`Using EIP-1559 gas pricing: maxFeePerGas=${gasPrice}`);
       } else {
         gasPrice = await publicClient.getGasPrice();
-        console.log(`Using legacy gas price: ${gasPrice}`);
       }
     } catch (error) {
-      console.warn('Failed to get gas price from RPC, using fallback:', error);
       // Fallback to a reasonable gas price if RPC calls fail
       // For W-Chain testnet, use a conservative estimate
       gasPrice = 1000000000n; // 1 gwei as fallback
-      console.log(`Using fallback gas price: ${gasPrice} wei (1 gwei)`);
     }
     
     // Ensure gasPrice is defined and valid
     if (!gasPrice || gasPrice <= 0n) {
       gasPrice = 1000000000n; // 1 gwei as final fallback
-      console.log(`Using final fallback gas price: ${gasPrice} wei`);
     }
     
     const gasCost = gasPrice * gasWithBuffer;
     const gasCostInWCO = (Number(gasCost) / 1e18).toFixed(6);
     
-    console.log(`Gas cost calculation: ${gasPrice} * ${gasWithBuffer} = ${gasCost} wei (${gasCostInWCO} WCO)`);
     
     return {
       estimatedGas,
@@ -148,7 +137,6 @@ export const estimateWalletCreationGas = async (name: string, privateKey: string
       gasCostInWCO
     };
   } catch (error) {
-    console.error('Gas estimation failed:', error);
     throw error;
   }
 };
@@ -158,9 +146,6 @@ export const deploySmartContractWallet = async (name: string, privateKey: string
     // Create a wallet from the private key
     const account = privateKeyToAccount(privateKey as `0x${string}`);
     
-    console.log(`Deploying wallet for account: ${account.address}`);
-    console.log(`Wallet Factory address: ${contracts.walletFactory.address}`);
-    console.log(`Wallet Implementation address: ${contracts.walletImplementation.address}`);
     
     // First, let's check if the contracts are actually deployed
     try {
@@ -171,8 +156,6 @@ export const deploySmartContractWallet = async (name: string, privateKey: string
         address: contracts.walletImplementation.address,
       });
       
-      console.log(`Factory contract code length: ${factoryCode?.length || 0}`);
-      console.log(`Implementation contract code length: ${implCode?.length || 0}`);
       
       if (!factoryCode || factoryCode === '0x') {
         throw new Error(`WalletFactory contract not deployed at ${contracts.walletFactory.address}`);
@@ -180,12 +163,9 @@ export const deploySmartContractWallet = async (name: string, privateKey: string
       if (!implCode || implCode === '0x') {
         throw new Error(`WalletImplementation contract not deployed at ${contracts.walletImplementation.address}`);
       }
-      console.log('Contract deployment verification passed');
       
-      console.log('Skipping factory implementation check due to TypeScript constraints');
       
     } catch (codeCheckError) {
-      console.error('Contract deployment check failed:', codeCheckError);
       throw new Error(`Contract deployment verification failed: ${codeCheckError instanceof Error ? codeCheckError.message : 'Unknown error'}`);
     }
     
@@ -198,7 +178,6 @@ export const deploySmartContractWallet = async (name: string, privateKey: string
       address: account.address,
     });
     
-    console.log(`Account balance: ${balance} wei, Required gas cost: ${gasCost} wei`);
     
     if (balance < gasCost) {
       const balanceInWCO = Number(balance) / 1e18;
@@ -217,9 +196,7 @@ export const deploySmartContractWallet = async (name: string, privateKey: string
         functionName: 'createWallet',
         args: [name],
       });
-      console.log(`Encoded function data: ${data}`);
     } catch (error) {
-      console.error('Failed to encode function data:', error);
       throw new Error(`Failed to encode function data: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
     
@@ -235,16 +212,13 @@ export const deploySmartContractWallet = async (name: string, privateKey: string
         address: account.address,
         blockTag: 'pending'
       });
-      console.log(`Account nonce: ${nonce}`);
     } catch (error) {
-      console.warn('Failed to get nonce from RPC, using 0:', error);
       nonce = 0; // Fallback to 0 if RPC call fails
     }
     
     // Ensure nonce is a valid number
     if (nonce === undefined || nonce === null || isNaN(nonce)) {
       nonce = 0;
-      console.log(`Using fallback nonce: ${nonce}`);
     }
 
     // Create the transaction with proper gas estimation and EIP-1559 if available
@@ -262,19 +236,8 @@ export const deploySmartContractWallet = async (name: string, privateKey: string
     transaction.type = '0x0'; // Legacy transaction type
     transaction.gasPrice = gasPrice;
     // Don't set EIP-1559 fields for legacy transactions
-    console.log(`Using legacy transaction: type=0x0, gasPrice=${gasPrice}`);
 
     // Debug: Log all transaction parameters to identify undefined values
-    console.log('Transaction parameters:', {
-      to: transaction.to,
-      data: transaction.data,
-      gas: transaction.gas,
-      nonce: transaction.nonce,
-      value: transaction.value,
-      gasPrice: transaction.gasPrice,
-      maxFeePerGas: transaction.maxFeePerGas,
-      maxPriorityFeePerGas: transaction.maxPriorityFeePerGas
-    });
 
     // Validate all required parameters are defined
     if (!transaction.to || !transaction.data || !transaction.gas || transaction.nonce === undefined || transaction.value === undefined) {
@@ -283,7 +246,6 @@ export const deploySmartContractWallet = async (name: string, privateKey: string
 
     // Skip walletClient approach due to RPC configuration issues
     // Use manual transaction signing for better control over RPC endpoint
-    console.log('Using manual transaction signing with controlled RPC endpoint');
     const signedTransaction = await account.signTransaction(transaction);
 
     // Send the raw transaction
@@ -291,24 +253,16 @@ export const deploySmartContractWallet = async (name: string, privateKey: string
       serializedTransaction: signedTransaction,
     });
     
-    console.log(`Transaction sent via manual signing: ${hash}`);
     
     // Wait for confirmation
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     
-    console.log('Transaction receipt:', receipt);
-    console.log('Transaction status:', receipt.status);
-    console.log('Transaction logs:', receipt.logs);
-    console.log('Number of logs:', receipt.logs.length);
     
     // Check if transaction was reverted
     if (receipt.status === 'reverted') {
-      console.error('Transaction was reverted by the smart contract');
-      console.error(`Gas used: ${receipt.gasUsed} out of ${gasWithBuffer} (${Number(receipt.gasUsed * 100n / gasWithBuffer)}% of limit)`);
       
       // Try to get the revert reason by simulating the transaction
       try {
-        console.log('Attempting contract simulation to get revert reason...');
         const simulateResult = await publicClient.simulateContract({
           address: contracts.walletFactory.address,
           abi: contracts.walletFactory.abi,
@@ -316,9 +270,7 @@ export const deploySmartContractWallet = async (name: string, privateKey: string
           args: [name],
           account: account.address,
         });
-        console.log('Simulation succeeded unexpectedly:', simulateResult);
       } catch (simulateError) {
-        console.error('Contract simulation error:', simulateError);
         
         // Extract more detailed error information
         let errorMessage = 'Unknown revert reason';
@@ -343,21 +295,14 @@ export const deploySmartContractWallet = async (name: string, privateKey: string
     
     return walletAddress;
   } catch (error) {
-    console.error('Deployment failed:', error);
     throw error;
   }
 };
 
 const extractWalletAddress = (logs: any[]): string => {
-  console.log('Extracting wallet address from logs...');
   
   // Log all events for debugging
   logs.forEach((log, index) => {
-    console.log(`Log ${index}:`, {
-      address: log.address,
-      topics: log.topics,
-      data: log.data
-    });
   });
   
   // Find any event from the factory contract (WalletCreated event)
@@ -366,20 +311,15 @@ const extractWalletAddress = (logs: any[]): string => {
   );
   
   if (factoryEvent) {
-    console.log('Found factory event:', factoryEvent);
     
     if (factoryEvent.topics && factoryEvent.topics.length >= 2) {
       // The first topic is the event signature, second topic is the wallet address
       // Remove the 0x prefix and first 6 characters (0x000000000000000000000000) to get the address
       const walletAddress = `0x${factoryEvent.topics[1].slice(26)}`;
-      console.log('Extracted wallet address:', walletAddress);
       return walletAddress;
     } else {
-      console.error('Factory event found but topics are missing or insufficient:', factoryEvent);
     }
   } else {
-    console.error('No factory event found. Expected factory address:', contracts.walletFactory.address);
-    console.error('Available log addresses:', logs.map(log => log.address));
   }
   
   // Try alternative approach - look for any log with topics that might contain an address
@@ -389,7 +329,6 @@ const extractWalletAddress = (logs: any[]): string => {
       const topic = log.topics[1];
       if (topic && topic.length === 66 && topic.startsWith('0x000000000000000000000000')) {
         const potentialAddress = `0x${topic.slice(26)}`;
-        console.log('Found potential wallet address in log:', potentialAddress);
         return potentialAddress;
       }
     }

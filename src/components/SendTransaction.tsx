@@ -90,7 +90,6 @@ export const SendTransaction = ({ wallet, isOpen, onClose, onTransactionSent }: 
         totalRequired: requirements.totalRequired,
       });
     } catch (error) {
-      console.error("Error calculating sponsorship info:", error);
       setSponsorshipInfo(null);
     }
   };
@@ -100,7 +99,6 @@ export const SendTransaction = ({ wallet, isOpen, onClose, onTransactionSent }: 
       const balance = await TransactionService.getWalletBalance(wallet.address);
       setWalletBalance(balance);
     } catch (error) {
-      console.error("Error loading wallet balance:", error);
       toast({
         title: "Error",
         description: "Failed to load wallet balance",
@@ -142,7 +140,6 @@ export const SendTransaction = ({ wallet, isOpen, onClose, onTransactionSent }: 
       );
       setGasEstimate(gas);
     } catch (error) {
-      console.error("Error estimating gas:", error);
       setGasEstimate(null);
     }
   };
@@ -215,7 +212,6 @@ export const SendTransaction = ({ wallet, isOpen, onClose, onTransactionSent }: 
         });
       }
     } catch (error) {
-      console.error("Error sending transaction:", error);
       if (error instanceof Error && error.message === "PIN_REQUIRED") {
         setPendingTransaction({
           recipient: recipientDisplayName,
@@ -247,7 +243,6 @@ export const SendTransaction = ({ wallet, isOpen, onClose, onTransactionSent }: 
       }
       return false;
     } catch (error) {
-      console.error("Error authenticating with PIN:", error);
       return false;
     }
   };
@@ -260,7 +255,6 @@ export const SendTransaction = ({ wallet, isOpen, onClose, onTransactionSent }: 
         description: "Address copied to clipboard",
       });
     } catch (error) {
-      console.error("Failed to copy:", error);
     }
   };
 

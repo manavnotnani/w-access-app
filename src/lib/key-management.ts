@@ -33,9 +33,7 @@ export class KeyManagementService {
       };
       
       sessionStorage.setItem(`${this.STORAGE_KEY}${walletId}`, JSON.stringify(keyData));
-      console.log(`🔐 Keys stored securely for wallet ${walletId}`);
     } catch (error) {
-      console.error("Error storing wallet keys:", error);
       throw new Error("Failed to store wallet keys securely");
     }
   }
@@ -60,10 +58,8 @@ export class KeyManagementService {
       }
 
       const keys = this.decryptKeys(keyData.keys);
-      console.log(`🔑 Keys retrieved for wallet ${walletId}`);
       return keys;
     } catch (error) {
-      console.error("Error retrieving wallet keys:", error);
       return null;
     }
   }
@@ -73,7 +69,6 @@ export class KeyManagementService {
    */
   static clearWalletKeys(walletId: string): void {
     sessionStorage.removeItem(`${this.STORAGE_KEY}${walletId}`);
-    console.log(`🗑️ Keys cleared for wallet ${walletId}`);
   }
 
   /**
@@ -82,7 +77,6 @@ export class KeyManagementService {
   static clearAllWalletKeys(): void {
     const keys = Object.keys(sessionStorage).filter(key => key.startsWith(this.STORAGE_KEY));
     keys.forEach(key => sessionStorage.removeItem(key));
-    console.log(`🗑️ All wallet keys cleared`);
   }
 
   /**
@@ -102,7 +96,6 @@ export class KeyManagementService {
       const wallet = ethers.Wallet.fromPhrase(mnemonic);
       return wallet.privateKey;
     } catch (error) {
-      console.error("Error deriving private key from mnemonic:", error);
       throw new Error("Failed to derive private key from mnemonic");
     }
   }
@@ -116,7 +109,6 @@ export class KeyManagementService {
       this.storeWalletKeys(walletId, keys);
       return keys;
     } catch (error) {
-      console.error("Error generating and storing wallet:", error);
       throw new Error("Failed to generate and store wallet");
     }
   }
@@ -171,9 +163,7 @@ export class KeyManagementService {
       };
 
       localStorage.setItem(`${this.STORAGE_KEY}${walletId}_encrypted`, JSON.stringify(storage));
-      console.log(`🔐 Encrypted keys stored for wallet ${walletId}`);
     } catch (error) {
-      console.error("Error storing encrypted keys:", error);
       throw new Error("Failed to store encrypted keys");
     }
   }
@@ -231,10 +221,8 @@ export class KeyManagementService {
       // Store in session for immediate use
       this.storeWalletKeys(walletId, keys);
       
-      console.log(`🔑 Keys decrypted and stored in session for wallet ${walletId}`);
       return keys;
     } catch (error) {
-      console.error("Error decrypting keys:", error);
       return null;
     }
   }
@@ -251,7 +239,6 @@ export class KeyManagementService {
    */
   static clearEncryptedKeys(walletId: string): void {
     localStorage.removeItem(`${this.STORAGE_KEY}${walletId}_encrypted`);
-    console.log(`🗑️ Encrypted keys cleared for wallet ${walletId}`);
   }
 
   /**
@@ -265,7 +252,6 @@ export class KeyManagementService {
       const jsonStr = JSON.stringify(keys);
       return btoa(jsonStr);
     } catch (error) {
-      console.error("Error encrypting keys:", error);
       throw new Error("Failed to encrypt keys");
     }
   }
@@ -281,7 +267,6 @@ export class KeyManagementService {
       const jsonStr = atob(encryptedKeys);
       return JSON.parse(jsonStr);
     } catch (error) {
-      console.error("Error decrypting keys:", error);
       throw new Error("Failed to decrypt keys");
     }
   }

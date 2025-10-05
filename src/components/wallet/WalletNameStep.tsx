@@ -19,9 +19,7 @@ export const WalletNameStep = ({ walletName, setWalletName }: WalletNameStepProp
   useEffect(() => {
     testSupabaseConnection().then(result => {
       if (result.success) {
-        console.log('✅ Supabase connection working!');
       } else {
-        console.log('❌ Supabase connection failed:', result.error);
       }
     });
   }, []);

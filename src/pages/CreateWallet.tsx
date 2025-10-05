@@ -67,16 +67,13 @@ const CreateWallet = () => {
   // Estimate gas when we reach step 5 if not already estimated
   useEffect(() => {
     if (step === 5 && walletKeys && walletName && !gasEstimate && !isEstimatingGas) {
-      console.log('CreateWallet - Step 5 reached, estimating gas...');
       const estimateGas = async () => {
         try {
           setIsEstimatingGas(true);
           const gasEstimate = await estimateWalletCreationGas(walletName, walletKeys.privateKey);
           setGasEstimate(gasEstimate);
           setIsEstimatingGas(false);
-          console.log('CreateWallet - Gas estimation complete in useEffect:', gasEstimate);
         } catch (error) {
-          console.error('Error estimating gas in useEffect:', error);
           setIsEstimatingGas(false);
         }
       };
@@ -95,35 +92,25 @@ const CreateWallet = () => {
   const progress = (step / steps.length) * 100;
 
   const handleKeysGenerated = async (keys: WalletKeys) => {
-    console.log('CreateWallet - handleKeysGenerated called with keys:', keys);
     setWalletKeys(keys);
     setKeyGenerationError(null);
     
-    console.log('CreateWallet - handleKeysGenerated:', {
-      walletName,
-      hasWalletName: !!walletName,
-      keysGenerated: !!keys
-    });
     
     // Estimate gas asynchronously without blocking the UI
     if (walletName) {
       // Start gas estimation in background without blocking the button
       estimateGasInBackground(walletName, keys.privateKey);
     } else {
-      console.log('CreateWallet - No wallet name, skipping gas estimation');
     }
   };
 
   const estimateGasInBackground = async (name: string, privateKey: string) => {
     try {
       setIsEstimatingGas(true);
-      console.log('CreateWallet - Starting background gas estimation...');
       const gasEstimate = await estimateWalletCreationGas(name, privateKey);
-      console.log('CreateWallet - Background gas estimation complete:', gasEstimate);
       setGasEstimate(gasEstimate);
       setIsEstimatingGas(false);
     } catch (error) {
-      console.error('Error in background gas estimation:', error);
       setIsEstimatingGas(false);
       // Don't throw error here, just log it - gas estimation will happen again during deployment
     }
@@ -148,7 +135,6 @@ const CreateWallet = () => {
       setShowRememberDeviceModal(false);
       navigate("/security-setup");
     } catch (error) {
-      console.error("Error setting up device storage:", error);
       toast({
         title: "Error",
         description: "Failed to set up device storage. You can configure this later in wallet settings.",
@@ -164,23 +150,15 @@ const CreateWallet = () => {
   const handleWalletNameChange = async (name: string) => {
     setWalletName(name);
     
-    console.log('CreateWallet - handleWalletNameChange:', {
-      name,
-      hasWalletKeys: !!walletKeys,
-      nameLength: name.length
-    });
     
     // Re-estimate gas if keys are already generated
     if (walletKeys && name.length >= 3) {
       try {
         setIsEstimatingGas(true);
-        console.log('CreateWallet - Re-estimating gas for new name...');
         const gasEstimate = await estimateWalletCreationGas(name, walletKeys.privateKey);
-        console.log('CreateWallet - Re-estimation complete:', gasEstimate);
         setGasEstimate(gasEstimate);
         setIsEstimatingGas(false);
       } catch (error) {
-        console.error('Error re-estimating gas:', error);
         setIsEstimatingGas(false);
       }
     }
@@ -198,14 +176,11 @@ const CreateWallet = () => {
         // Step 1: Use existing gas estimate or estimate if not available
         let currentGasEstimate = gasEstimate;
         if (!currentGasEstimate) {
-          console.log('CreateWallet - No gas estimate found, estimating now...');
           setIsEstimatingGas(true);
           currentGasEstimate = await estimateWalletCreationGas(walletName, walletKeys.privateKey);
           setGasEstimate(currentGasEstimate);
           setIsEstimatingGas(false);
-          console.log('CreateWallet - Gas estimation complete:', currentGasEstimate);
         } else {
-          console.log('CreateWallet - Using existing gas estimate:', currentGasEstimate);
         }
 
         toast({
@@ -296,7 +271,6 @@ const CreateWallet = () => {
           throw new Error("Failed to save wallet to database");
         }
       } catch (error) {
-        console.error("Error saving wallet:", error);
         const errorMessage = error instanceof Error ? error.message : "Failed to create wallet";
         toast({
           title: "Error",
@@ -348,12 +322,6 @@ const CreateWallet = () => {
           />
         );
       case 5:
-        console.log('CreateWallet - Rendering CompleteStep with:', {
-          walletName,
-          walletAddress: walletKeys?.address,
-          gasEstimate,
-          isEstimatingGas
-        });
         return <CompleteStep walletName={walletName} walletAddress={walletKeys?.address} gasEstimate={gasEstimate} isEstimatingGas={isEstimatingGas} />;
       default:
         return null;
@@ -440,16 +408,6 @@ const CreateWallet = () => {
               // For step 2 (Key Generation), don't require gas estimation to be complete
               const requiresGasEstimation = step === 5; // Only step 5 (Complete) requires gas estimation
               const disabled = !canContinue() || isSaving || (requiresGasEstimation && isEstimatingGas) || isFunding || isCreatingWallet;
-              console.log('CreateWallet - Button disabled state:', {
-                step,
-                canContinue: canContinue(),
-                isSaving,
-                isEstimatingGas,
-                isFunding,
-                isCreatingWallet,
-                requiresGasEstimation,
-                disabled
-              });
               return disabled;
             })()}
             className="bg-gradient-primary hover:opacity-90"

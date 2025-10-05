@@ -63,7 +63,6 @@ const Recovery = () => {
       }, 2000);
 
     } catch (error) {
-      console.error('Recovery error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to recover wallet';
       setRecoveryError(errorMessage);
       
@@ -114,7 +113,6 @@ const Recovery = () => {
       toast({ title: "Wallets recovered", description: `Recovered ${wallets.length} wallet(s).` });
       navigate('/dashboard');
     } catch (e) {
-      console.error(e);
       toast({ title: "Recovery failed", variant: "destructive" });
     } finally {
       setEmailRecovering(false);

@@ -22,7 +22,6 @@ export const WalletBalance = ({ walletAddress, showRefresh = false, className = 
       const walletBalance = await TransactionService.getWalletBalance(walletAddress);
       setBalance(walletBalance);
     } catch (error) {
-      console.error("Error loading wallet balance:", error);
       toast({
         title: "Error",
         description: "Failed to load wallet balance",

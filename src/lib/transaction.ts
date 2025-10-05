@@ -49,28 +49,20 @@ export class TransactionService {
       
       // Ensure minimum gas price to avoid "underpriced" errors
       if (gasPrice < minGasPrice) {
-        console.warn(`Gas price too low (${Number(gasPrice) / 1e9} gwei), using minimum 1 gwei`);
         gasPrice = minGasPrice;
       }
       
       // Cap extremely high gas prices
       if (gasPrice > maxGasPrice) {
-        console.warn(`Gas price too high (${Number(gasPrice) / 1e9} gwei), capping to 1000 gwei`);
         gasPrice = maxGasPrice;
       }
       
       // Add 10% buffer for safety
       const finalGasPrice = (gasPrice * 110n) / 100n;
       
-      console.log('Gas price calculation:', {
-        networkGasPrice: Number(currentGasPrice) / 1e9,
-        finalGasPrice: Number(finalGasPrice) / 1e9,
-        inGwei: Number(finalGasPrice) / 1e9
-      });
       
       return finalGasPrice;
     } catch (error) {
-      console.error("Error getting gas price:", error);
       // Fallback to a reasonable gas price
       return parseEther("0.00000001"); // 10 gwei fallback
     }
@@ -84,7 +76,6 @@ export class TransactionService {
       try {
         return await this.getReasonableGasPrice();
       } catch (error) {
-        console.warn(`Gas price attempt ${attempt} failed:`, error);
         if (attempt === maxRetries) {
           // Final fallback - use a higher gas price for this network
           return parseEther("0.0000001"); // 100 gwei fallback
@@ -106,13 +97,6 @@ export class TransactionService {
     // Sponsor if gas cost is more than 1 WCO (very expensive)
     const shouldSponsor = gasCostInWCO > 1.0;
     
-    console.log('Sponsorship check:', {
-      gasCostInWCO,
-      walletBalance: formatEther(walletBalance),
-      transactionValue: formatEther(transactionValue),
-      totalCost: formatEther(totalCost),
-      shouldSponsor
-    });
     
     return shouldSponsor;
   }
@@ -123,19 +107,15 @@ export class TransactionService {
   private static async sponsorTransaction(walletAddress: string, gasCost: bigint): Promise<{ success: boolean; error?: string }> {
     try {
       const gasCostInWCO = formatEther(gasCost);
-      console.log(`Sponsoring transaction for wallet ${walletAddress} with gas cost ${gasCostInWCO} WCO`);
       
       const result = await FundingService.fundWalletForGas(walletAddress, gasCostInWCO);
       
       if (result.success) {
-        console.log(`Successfully sponsored transaction for wallet ${walletAddress}`);
         return { success: true };
       } else {
-        console.error(`Failed to sponsor transaction: ${result.error}`);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error("Error sponsoring transaction:", error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : "Failed to sponsor transaction" 
@@ -156,7 +136,6 @@ export class TransactionService {
       });
       return nonce as bigint;
     } catch (error) {
-      console.error("Error getting wallet nonce:", error);
       throw new Error("Failed to get wallet nonce");
     }
   }
@@ -199,21 +178,9 @@ export class TransactionService {
         message: { raw: txHash }
       });
 
-      console.log('Generated signature for execute function:', {
-        chainId: chainId.toString(),
-        walletAddress,
-        dest,
-        value: value.toString(),
-        func,
-        nonce: nonce.toString(),
-        packedData,
-        txHash,
-        signature
-      });
 
       return signature;
     } catch (error) {
-      console.error("Error generating execute signature:", error);
       throw new Error("Failed to generate signature for smart contract wallet");
     }
   }
@@ -233,28 +200,20 @@ export class TransactionService {
       
       // Ensure minimum gas price for high-fee networks
       if (gasPrice < minGasPrice) {
-        console.warn(`Gas price too low (${Number(gasPrice) / 1e9} gwei), using minimum 100 gwei`);
         gasPrice = minGasPrice;
       }
       
       // Cap extremely high gas prices
       if (gasPrice > maxGasPrice) {
-        console.warn(`Gas price too high (${Number(gasPrice) / 1e9} gwei), capping to 10000 gwei`);
         gasPrice = maxGasPrice;
       }
       
       // Add 20% buffer for high-fee networks
       const finalGasPrice = (gasPrice * 120n) / 100n;
       
-      console.log('Aggressive gas price calculation:', {
-        networkGasPrice: Number(currentGasPrice) / 1e9,
-        finalGasPrice: Number(finalGasPrice) / 1e9,
-        inGwei: Number(finalGasPrice) / 1e9
-      });
       
       return finalGasPrice;
     } catch (error) {
-      console.error("Error getting aggressive gas price:", error);
       // High fallback for networks that require high gas prices
       return parseEther("0.0000002"); // 200 gwei fallback
     }
@@ -275,7 +234,6 @@ export class TransactionService {
         balanceWei: balance,
       };
     } catch (error) {
-      console.error("Error getting wallet balance:", error);
       throw new Error(`Failed to get wallet balance: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -298,7 +256,6 @@ export class TransactionService {
       // Add 20% buffer for safety
       return (gasEstimate * 120n) / 100n;
     } catch (error) {
-      console.error("Error estimating gas:", error);
       throw new Error(`Failed to estimate gas: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -399,14 +356,12 @@ export class TransactionService {
           };
         }
       } catch (e) {
-        console.warn('Unable to verify relayer balance, proceeding to attempt relay.', e);
       }
 
       // Check if transaction should be sponsored
       const shouldSponsor = this.shouldSponsorTransaction(totalGasCost, walletBalance.balanceWei, amountWei);
       
       if (shouldSponsor) {
-        console.log("Transaction will be sponsored due to high gas costs");
         
         // Sponsor the transaction by funding the wallet
         const sponsorshipResult = await this.sponsorTransaction(wallet.address, totalGasCost);
@@ -444,15 +399,6 @@ export class TransactionService {
       // No need for owner's gas balance when relaying; server sponsors gas
 
       // Relay via backend/server (server pays gas)
-      console.log('Smart contract transaction details:', {
-        from: FundingService.getServerAddress(),
-        to: wallet.address,
-        gasPrice: gasPrice.toString(),
-        gasPriceInGwei: Number(gasPrice) / 1e9,
-        gasLimit: gasLimit.toString(),
-        sponsored: shouldSponsor,
-        executeData: executeData
-      });
 
       const relay = await FundingService.relayTransaction({
         to: wallet.address as `0x${string}`,
@@ -476,7 +422,6 @@ export class TransactionService {
         gasCost: formatEther(totalGasCost),
       };
     } catch (error) {
-      console.error("Error sending transaction via contract:", error);
       
       // Handle specific error types
       let errorMessage = "Failed to send transaction";
@@ -516,7 +461,6 @@ export class TransactionService {
       }
       
       if (!privateKey) {
-        console.warn(`No private key found for wallet ${walletId}. Keys may have expired or not been stored.`);
         return null;
       }
       
@@ -525,7 +469,6 @@ export class TransactionService {
       if (error instanceof Error && error.message === "PIN_REQUIRED") {
         throw error; // Propagate PIN requirement to UI
       }
-      console.error("Error retrieving wallet private key:", error);
       return null;
     }
   }
@@ -538,7 +481,6 @@ export class TransactionService {
       const keys = await KeyManagementService.getKeysWithPin(walletId, pin);
       return keys?.privateKey || null;
     } catch (error) {
-      console.error("Error authenticating with PIN:", error);
       return null;
     }
   }
@@ -586,7 +528,6 @@ export class TransactionService {
         willBeSponsored: shouldSponsor,
       };
     } catch (error) {
-      console.error("Error calculating minimum balance requirements:", error);
       throw new Error("Failed to calculate minimum balance requirements");
     }
   }

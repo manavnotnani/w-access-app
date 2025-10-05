@@ -41,7 +41,6 @@ const NameService = () => {
         
         setExistingNames(names);
       } catch (error) {
-        console.error("Error fetching existing names:", error);
         toast({
           title: "Error",
           description: "Failed to load existing names from database.",
