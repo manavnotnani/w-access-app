@@ -15,7 +15,6 @@ export const SeedPhraseStep = ({ seedPhrase, showSeedPhrase, setShowSeedPhrase }
       await navigator.clipboard.writeText(seedPhrase.join(' '));
       // You could add a toast notification here
     } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
     }
   };
 

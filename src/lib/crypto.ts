@@ -66,7 +66,6 @@ export class CryptoService {
         seedPhrase
       };
     } catch (error) {
-      console.error('Error generating wallet:', error);
       throw new Error('Failed to generate secure wallet keys');
     }
   }
@@ -103,7 +102,6 @@ export class CryptoService {
         seedPhrase: mnemonic.split(' ')
       };
     } catch (error) {
-      console.error('Error recovering wallet:', error);
       throw new Error('Failed to recover wallet from mnemonic');
     }
   }

@@ -63,7 +63,6 @@ const SecuritySetup = () => {
       await sendOtpEmail({ to: recoveryEmail, code, subject: "Your verification code" });
       toast({ title: "Verification code sent", description: "Check your email for the code." });
     } catch (e) {
-      console.error(e);
       toast({ title: "Error", description: "Could not send verification code.", variant: "destructive" });
     } finally {
       setIsSendingCode(false);
@@ -126,7 +125,6 @@ const SecuritySetup = () => {
         } as any);
       }
     } catch (e) {
-      console.error('Failed saving settings', e);
     } finally {
       setSetupComplete(true);
       setTimeout(() => {

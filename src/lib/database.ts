@@ -16,7 +16,6 @@ export const walletService = {
       .single()
     
     if (error && error.code !== 'PGRST116') {
-      console.error('Error checking name availability:', error)
       return false
     }
     
@@ -27,7 +26,6 @@ export const walletService = {
   async createWallet(walletData: Omit<Wallet, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Wallet | null> {
     if (DEVELOPMENT_MODE) {
       // Development mode: skip session tracking
-      console.log('Creating wallet without session tracking (Development mode)')
       
       const walletDataWithoutSession = {
         name: walletData.name,
@@ -42,7 +40,6 @@ export const walletService = {
         .single()
       
       if (error) {
-        console.error('Error creating wallet:', error)
         return null
       }
       
@@ -62,7 +59,6 @@ export const walletService = {
         .single()
       
       if (error) {
-        console.error('Error creating wallet:', error)
         return null
       }
       
@@ -78,7 +74,6 @@ export const walletService = {
       .order('created_at', { ascending: false })
     
     if (error) {
-      console.error('Error fetching wallets:', error)
       return []
     }
     
@@ -94,7 +89,6 @@ export const walletService = {
       .single()
     
     if (error) {
-      console.error('Error fetching wallet by ID:', error)
       return null
     }
     
@@ -105,7 +99,6 @@ export const walletService = {
   async getWalletsBySession(): Promise<Wallet[]> {
     if (DEVELOPMENT_MODE) {
       // Development mode: return all wallets
-      console.log('Fetching all wallets (Development mode)')
       
       const { data, error } = await supabase
         .from('wallets')
@@ -113,7 +106,6 @@ export const walletService = {
         .order('created_at', { ascending: false })
       
       if (error) {
-        console.error('Error fetching wallets:', error)
         return []
       }
       
@@ -128,7 +120,6 @@ export const walletService = {
         .order('created_at', { ascending: false })
       
       if (error) {
-        console.error('Error fetching session wallets:', error)
         return []
       }
       
@@ -145,7 +136,6 @@ export const walletService = {
       .single()
     
     if (error) {
-      console.error('Error fetching wallet:', error)
       return null
     }
     
@@ -161,7 +151,6 @@ export const walletService = {
       .single()
     
     if (error) {
-      console.error('Error fetching wallet by address:', error)
       return null
     }
     
@@ -177,7 +166,6 @@ export const walletService = {
       .single()
     
     if (error && error.code !== 'PGRST116') {
-      console.error('Error checking address existence:', error)
       return false
     }
     
@@ -195,7 +183,6 @@ export const walletService = {
       .eq('is_verified', true)
 
     if (error) {
-      console.error('Error fetching wallets by recovery email:', error)
       return []
     }
 
@@ -212,7 +199,6 @@ export const walletService = {
       .update({ session_id: sessionId })
       .in('id', walletIds)
     if (error) {
-      console.error('Error rebinding wallets to session:', error)
       return false
     }
     return true
@@ -228,7 +214,6 @@ export const walletService = {
       .single()
     
     if (error) {
-      console.error('Error updating wallet:', error)
       return null
     }
     
@@ -243,7 +228,6 @@ export const walletService = {
       .eq('id', walletId)
     
     if (error) {
-      console.error('Error deleting wallet:', error)
       return false
     }
     
@@ -257,7 +241,6 @@ export const walletService = {
       .select('id')
     
     if (error) {
-      console.error('Error fetching wallet stats:', error)
       return { total: 0, active: 0 }
     }
     
@@ -279,7 +262,6 @@ export const recoveryService = {
       .single()
     
     if (error) {
-      console.error('Error adding recovery method:', error)
       return null
     }
     
@@ -295,7 +277,6 @@ export const recoveryService = {
       .order('created_at', { ascending: false })
     
     if (error) {
-      console.error('Error fetching recovery methods:', error)
       return []
     }
     
@@ -310,7 +291,6 @@ export const recoveryService = {
       .eq('id', methodId)
     
     if (error) {
-      console.error('Error verifying recovery method:', error)
       return false
     }
     
@@ -329,7 +309,6 @@ export const settingsService = {
       .single()
     
     if (error && error.code !== 'PGRST116') {
-      console.error('Error fetching wallet settings:', error)
       return null
     }
     
@@ -345,7 +324,6 @@ export const settingsService = {
       .single()
     
     if (error) {
-      console.error('Error upserting wallet settings:', error)
       return null
     }
     

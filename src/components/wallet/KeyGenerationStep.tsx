@@ -46,11 +46,9 @@ export const KeyGenerationStep = ({ onKeysGenerated, onError }: KeyGenerationSte
       setIsGenerating(false);
       
       // Pass the generated keys to parent component
-      console.log('KeyGenerationStep - Calling onKeysGenerated with:', walletKeys);
       onKeysGenerated(walletKeys);
 
     } catch (err) {
-      console.error('Key generation error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate keys';
       setError(errorMessage);
       onError(errorMessage);

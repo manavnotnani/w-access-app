@@ -38,7 +38,6 @@ const Dashboard = () => {
       const userWallets = await walletService.getWalletsBySession();
       setWallets(userWallets);
     } catch (error) {
-      console.error("Error loading wallets:", error);
       toast({
         title: "Error",
         description: "Failed to load wallets.",
@@ -57,7 +56,6 @@ const Dashboard = () => {
         description: `${label} copied to clipboard.`,
       });
     } catch (error) {
-      console.error("Failed to copy:", error);
       toast({
         title: "Error",
         description: "Failed to copy to clipboard.",
@@ -321,6 +319,7 @@ const Dashboard = () => {
                   <Button
                     variant="outline"
                     onClick={() => navigate("/settings")}
+                    disabled={true}
                   >
                     Settings
                   </Button>

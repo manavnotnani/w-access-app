@@ -8,7 +8,6 @@ const SERVER_PRIVATE_KEY_RAW = import.meta.env.VITE_SERVER_PRIVATE_KEY;
 // Validate and format the private key
 const SERVER_PRIVATE_KEY = (() => {
   if (!SERVER_PRIVATE_KEY_RAW) {
-    console.warn('VITE_SERVER_PRIVATE_KEY not found in environment variables');
     return "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
   }
   
@@ -19,7 +18,6 @@ const SERVER_PRIVATE_KEY = (() => {
   
   // Validate the length (should be 66 characters including 0x prefix)
   if (formattedKey.length !== 66) {
-    console.error('Invalid private key length:', formattedKey.length);
     throw new Error('Invalid private key: must be 64 hex characters (32 bytes)');
   }
   
@@ -50,7 +48,6 @@ export class FundingService {
     try {
       return privateKeyToAccount(SERVER_PRIVATE_KEY as `0x${string}`);
     } catch (error) {
-      console.error('Failed to create server account from private key:', error);
       throw new Error('Invalid server private key configuration');
     }
   })();
@@ -76,7 +73,6 @@ export class FundingService {
       });
       return formatEther(balance);
     } catch (error) {
-      console.error("Error getting server balance:", error);
       throw new Error("Failed to get server balance");
     }
   }
@@ -96,7 +92,6 @@ export class FundingService {
       
       return balanceInWei >= totalRequired;
     } catch (error) {
-      console.error("Error checking server balance:", error);
       return false;
     }
   }
@@ -125,7 +120,6 @@ export class FundingService {
         error: !hasBalance ? "Server account has insufficient balance for funding" : undefined
       };
     } catch (error) {
-      console.error("Error getting funding status:", error);
       return {
         isFunded: false,
         balance: "0",
@@ -147,7 +141,6 @@ export class FundingService {
       const requiredAmountInWei = parseEther(requiredAmount);
       return walletBalance >= requiredAmountInWei;
     } catch (error) {
-      console.error("Error checking wallet funding status:", error);
       return false;
     }
   }
@@ -205,7 +198,6 @@ export class FundingService {
         transactionHash: hash
       };
     } catch (error) {
-      console.error("Error funding wallet:", error);
       return {
         success: false,
         error: (() => {
@@ -232,24 +224,20 @@ export class FundingService {
       // Add a small buffer (10%) to the gas cost for safety
       const fundingAmount = (parseFloat(gasCostInWCO) * 1.1).toFixed(6);
       
-      console.log(`Checking if wallet ${walletAddress} needs funding for gas cost ${gasCostInWCO} WCO`);
       
       // Check if wallet is already funded with sufficient amount
       const isAlreadyFunded = await this.isWalletFunded(walletAddress, fundingAmount);
       
       if (isAlreadyFunded) {
-        console.log(`Wallet ${walletAddress} is already funded with sufficient amount (${fundingAmount} WCO)`);
         return {
           success: true,
           transactionHash: "already_funded" // Special identifier for already funded wallets
         };
       }
       
-      console.log(`Funding wallet ${walletAddress} with ${fundingAmount} WCO for gas cost ${gasCostInWCO} WCO`);
       
       return await this.fundWallet(walletAddress, fundingAmount);
     } catch (error) {
-      console.error("Error funding wallet for gas:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Failed to fund wallet for gas"
@@ -334,7 +322,6 @@ export class FundingService {
 
       return { success: true, transactionHash: hash };
     } catch (error) {
-      console.error('Error relaying transaction:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Failed to relay transaction' };
     }
   }

@@ -24,7 +24,6 @@ export const useWalletName = (walletName: string) => {
         const available = await walletService.checkNameAvailability(walletName)
         setIsAvailable(available)
       } catch (err) {
-        console.error('Error checking wallet name availability:', err)
         setError('Failed to check availability')
         setIsAvailable(false)
       } finally {

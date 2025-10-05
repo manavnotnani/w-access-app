@@ -63,7 +63,6 @@ const Recovery = () => {
       }, 2000);
 
     } catch (error) {
-      console.error('Recovery error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to recover wallet';
       setRecoveryError(errorMessage);
       
@@ -114,7 +113,6 @@ const Recovery = () => {
       toast({ title: "Wallets recovered", description: `Recovered ${wallets.length} wallet(s).` });
       navigate('/dashboard');
     } catch (e) {
-      console.error(e);
       toast({ title: "Recovery failed", variant: "destructive" });
     } finally {
       setEmailRecovering(false);
@@ -126,21 +124,21 @@ const Recovery = () => {
       id: "cloud",
       title: "Cloud Backup",
       description: "Encrypted backup stored securely in the cloud",
-      status: "active",
-      lastBackup: "2 hours ago"
+      status: "implementing-soon",
+      lastBackup: null
     },
     {
       id: "social",
       title: "Social Recovery",
       description: "Recover using trusted contacts",
-      status: "configured",
-      guardians: 3
+      status: "implementing-soon",
+      guardians: null
     },
     {
       id: "hardware",
       title: "Hardware Backup",
       description: "Physical security key backup",
-      status: "not-configured",
+      status: "implementing-soon",
       lastBackup: null
     }
   ];
@@ -150,6 +148,7 @@ const Recovery = () => {
       case "active": return "text-green-400";
       case "configured": return "text-blue-400";
       case "not-configured": return "text-red-400";
+      case "implementing-soon": return "text-yellow-400";
       default: return "text-muted-foreground";
     }
   };
@@ -159,6 +158,7 @@ const Recovery = () => {
       case "active": return <CheckCircle className="w-4 h-4 text-green-400" />;
       case "configured": return <Shield className="w-4 h-4 text-blue-400" />;
       case "not-configured": return <AlertTriangle className="w-4 h-4 text-red-400" />;
+      case "implementing-soon": return <AlertTriangle className="w-4 h-4 text-yellow-400" />;
       default: return null;
     }
   };
@@ -192,7 +192,7 @@ const Recovery = () => {
 
             <div className="grid gap-6">
               {backupMethods.map((method) => (
-                <Card key={method.id} className="border-primary/20">
+                <Card key={method.id} className={`border-primary/20 ${method.status === "implementing-soon" ? "opacity-75" : ""}`}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -202,9 +202,16 @@ const Recovery = () => {
                           <CardDescription>{method.description}</CardDescription>
                         </div>
                       </div>
-                      <Badge variant={method.status === "active" ? "default" : "outline"}>
-                        {method.status}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        {method.status === "implementing-soon" && (
+                          <Badge variant="secondary" className="text-xs">
+                            Implementing Soon
+                          </Badge>
+                        )}
+                        <Badge variant={method.status === "active" ? "default" : "outline"}>
+                          {method.status === "implementing-soon" ? "coming soon" : method.status}
+                        </Badge>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -213,6 +220,7 @@ const Recovery = () => {
                         {method.lastBackup && `Last backup: ${method.lastBackup}`}
                         {method.guardians && `${method.guardians} guardians configured`}
                         {method.status === "not-configured" && "Not configured"}
+                        {method.status === "implementing-soon" && "Feature under development"}
                       </div>
                       <div className="flex gap-2">
                         {method.status === "active" && (
@@ -225,8 +233,9 @@ const Recovery = () => {
                           variant={method.status === "not-configured" ? "default" : "outline"} 
                           size="sm"
                           className={method.status === "not-configured" ? "bg-gradient-primary hover:opacity-90" : ""}
+                          disabled={method.status === "implementing-soon"}
                         >
-                          {method.status === "not-configured" ? "Setup" : "Configure"}
+                          {method.status === "implementing-soon" ? "Coming Soon" : method.status === "not-configured" ? "Setup" : "Configure"}
                         </Button>
                       </div>
                     </div>
@@ -246,6 +255,15 @@ const Recovery = () => {
                           Recovery requires approval from 2 of 3 guardians
                         </div>
                       </div>
+                    )}
+
+                    {method.id === "hardware" && method.status === "implementing-soon" && (
+                      <Alert>
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription>
+                          Hardware backup functionality is currently under development and will be available in a future update.
+                        </AlertDescription>
+                      </Alert>
                     )}
                   </CardContent>
                 </Card>
@@ -278,20 +296,26 @@ const Recovery = () => {
                     <span>Seed Phrase</span>
                   </Button>
                   <Button
-                    variant={recoveryMethod === "cloud" ? "default" : "outline"}
-                    onClick={() => setRecoveryMethod("cloud")}
-                    className="h-auto p-4 flex flex-col items-center gap-2"
+                    variant="outline"
+                    disabled={true}
+                    className="h-auto p-4 flex flex-col items-center gap-2 opacity-75"
                   >
                     <Download className="w-6 h-6" />
                     <span>Cloud Backup</span>
+                    <Badge variant="secondary" className="text-xs mt-1">
+                      Coming Soon
+                    </Badge>
                   </Button>
                   <Button
-                    variant={recoveryMethod === "social" ? "default" : "outline"}
-                    onClick={() => setRecoveryMethod("social")}
-                    className="h-auto p-4 flex flex-col items-center gap-2"
+                    variant="outline"
+                    disabled={true}
+                    className="h-auto p-4 flex flex-col items-center gap-2 opacity-75"
                   >
                     <Shield className="w-6 h-6" />
                     <span>Social Recovery</span>
+                    <Badge variant="secondary" className="text-xs mt-1">
+                      Coming Soon
+                    </Badge>
                   </Button>
                   <Button
                     variant={recoveryMethod === "email" ? "default" : "outline"}
@@ -452,24 +476,34 @@ const Recovery = () => {
                     </Badge>
                   </div>
 
-                  <div className="flex items-center justify-between p-4 border rounded-lg bg-green-500/10 border-green-500/20">
+                  <div className="flex items-center justify-between p-4 border rounded-lg bg-yellow-500/10 border-yellow-500/20 opacity-75">
                     <div className="flex items-center gap-3">
-                      <CheckCircle className="w-5 h-5 text-green-400" />
-                      <span>Cloud backup enabled</span>
+                      <AlertTriangle className="w-5 h-5 text-yellow-400" />
+                      <span>Cloud backup</span>
                     </div>
-                    <Badge variant="outline" className="text-green-400 border-green-400">
-                      ✓ Active
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">
+                        Implementing Soon
+                      </Badge>
+                      <Badge variant="outline" className="text-yellow-400 border-yellow-400">
+                        Coming Soon
+                      </Badge>
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between p-4 border rounded-lg bg-yellow-500/10 border-yellow-500/20">
+                  <div className="flex items-center justify-between p-4 border rounded-lg bg-yellow-500/10 border-yellow-500/20 opacity-75">
                     <div className="flex items-center gap-3">
                       <AlertTriangle className="w-5 h-5 text-yellow-400" />
                       <span>Hardware backup</span>
                     </div>
-                    <Button variant="outline" size="sm">
-                      Setup
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">
+                        Implementing Soon
+                      </Badge>
+                      <Button variant="outline" size="sm" disabled={true}>
+                        Coming Soon
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
