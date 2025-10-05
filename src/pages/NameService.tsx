@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Search, Plus, Settings, ExternalLink, CheckCircle, Clock, AlertCircle, Loader2 } from "lucide-react";
+import { Search, Plus, ExternalLink, CheckCircle, Clock, AlertCircle, Loader2 } from "lucide-react";
 import { walletService } from "@/lib/database";
 import { useToast } from "@/hooks/use-toast";
 
@@ -20,17 +17,10 @@ interface ExistingName {
 }
 
 const NameService = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedName, setSelectedName] = useState("");
   const [existingNames, setExistingNames] = useState<ExistingName[]>([]);
   const [loadingNames, setLoadingNames] = useState(true);
   const { toast } = useToast();
 
-  const searchResults = [
-    { name: "alice-dev.w-chain", status: "available", price: "10 W-CHAIN" },
-    { name: "alice-nft.w-chain", status: "available", price: "15 W-CHAIN" },
-    { name: "alice-defi.w-chain", status: "taken", owner: "0x1111...2222" },
-  ];
 
   // Fetch existing names from database
   useEffect(() => {
@@ -100,9 +90,8 @@ const NameService = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="existing-names" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="existing-names">Existing Names</TabsTrigger>
-            <TabsTrigger value="register">Register New</TabsTrigger>
             <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
           </TabsList>
 
@@ -160,57 +149,6 @@ const NameService = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="register" className="space-y-6">
-            <Card className="border-primary/20">
-              <CardHeader>
-                <CardTitle>Register New Name</CardTitle>
-                <CardDescription>Claim your unique W-Chain identity</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <Label htmlFor="new-name">Choose your name</Label>
-                  <div className="flex mt-1">
-                    <Input
-                      id="new-name"
-                      value={selectedName}
-                      onChange={(e) => setSelectedName(e.target.value)}
-                      placeholder="yourname"
-                      className="rounded-r-none"
-                    />
-                    <div className="px-3 py-2 bg-muted border border-l-0 rounded-r-md text-sm text-muted-foreground">
-                      .w-chain
-                    </div>
-                  </div>
-                </div>
-
-                <Alert>
-                  <CheckCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    Registration fee: 10 W-CHAIN (1 year) • Premium names may cost more
-                  </AlertDescription>
-                </Alert>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <span>Registration (1 year)</span>
-                    <span className="font-semibold">10 W-CHAIN</span>
-                  </div>
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <span>Gas Fee (estimated)</span>
-                    <span className="font-semibold">0.5 W-CHAIN</span>
-                  </div>
-                  <div className="flex items-center justify-between p-4 border rounded-lg bg-primary/5">
-                    <span className="font-semibold">Total</span>
-                    <span className="font-bold text-primary">10.5 W-CHAIN</span>
-                  </div>
-                </div>
-
-                <Button className="w-full bg-gradient-primary hover:opacity-90" disabled={!selectedName}>
-                  Register Name
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           <TabsContent value="marketplace" className="space-y-6">
             <Card className="border-primary/20">

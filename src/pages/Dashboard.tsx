@@ -321,6 +321,7 @@ const Dashboard = () => {
                   <Button
                     variant="outline"
                     onClick={() => navigate("/settings")}
+                    disabled={true}
                   >
                     Settings
                   </Button>
