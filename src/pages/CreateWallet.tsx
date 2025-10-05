@@ -223,7 +223,7 @@ const CreateWallet = () => {
           const relayerInsufficient = errorText.includes("relayer has insufficient funds");
           if (relayerInsufficient) {
             const title = "Relayer needs funds";
-            const description = `Our gas sponsor is low. Send at least ${requiredAmount} WCO to your new wallet address (${walletKeys.address}) to proceed, or try again later.`;
+            const description = `Our gas sponsor is low. Please temporarily fund this wallet with at least ${requiredAmount} WCO to create your wallet (${walletKeys.address}), or try again later.`;
             setBanner({ title, description });
           } else {
             toast({
