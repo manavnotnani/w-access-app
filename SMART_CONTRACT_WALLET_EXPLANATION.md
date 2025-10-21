@@ -143,3 +143,6 @@ With the smart contract wallet:
 3. Assets are correctly moved from wallet to recipient
 
 This fix ensures that your transactions work properly through the smart contract wallet system, providing better security and functionality.
+
+
+

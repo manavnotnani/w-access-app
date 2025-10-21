@@ -106,3 +106,6 @@ if (error.message.includes("underpriced")) {
 - Clear error messages for users
 
 This enhanced strategy ensures transactions succeed on high-fee networks while maintaining cost efficiency and providing excellent user experience.
+
+
+

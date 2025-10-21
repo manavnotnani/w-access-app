@@ -130,3 +130,6 @@ const privateKey = await TransactionService.authenticateWithPin(walletId, pin);
 ```
 
 This system provides a secure, user-friendly way to access wallet functionality without compromising security or requiring users to repeatedly enter sensitive information.
+
+
+
