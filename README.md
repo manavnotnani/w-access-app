@@ -204,23 +204,48 @@ w-access/
 
 ## 📋 Smart Contracts
 
-### Wallet Factory (`0x52d50D41FABB1A2C3434cA79d9a3963D9140C7De`)
+### Testnet Contracts (Chain ID: 71117)
+
+#### Wallet Factory (`0x52d50D41FABB1A2C3434cA79d9a3963D9140C7De`)
 - Creates new smart contract wallets using EIP-1167 minimal proxies
 - Manages wallet initialization and ownership
 - Provides deterministic address prediction
 
-### Wallet Implementation (`0x440Df1c316041B15F08298Da6c267B38Dcd3aE7c`)
+#### Wallet Implementation (`0x440Df1c316041B15F08298Da6c267B38Dcd3aE7c`)
 - Core wallet functionality with EIP-1271 signature validation
 - Social recovery system with guardian management
 - Batch transaction execution
 - Nonce-based transaction ordering
 
-### WNS Registry (`0x269ca8D0fB38Fe18435B2AC70911487ED340B2F3`)
+#### WNS Registry (`0x269ca8D0fB38Fe18435B2AC70911487ED340B2F3`)
 - Human-readable name registration and resolution
 - Name-to-address and address-to-name mapping
 - Name transfer and update functionality
 
-### Recovery Manager (`0x7C2930C0AA1E7A17694EdF82e6d1Ae4E6ef3f607`)
+#### Recovery Manager (`0x7C2930C0AA1E7A17694EdF82e6d1Ae4E6ef3f607`)
+- Manages social recovery processes
+- Guardian coordination and recovery execution
+- Recovery cooldown and security features
+
+### Mainnet Contracts (Chain ID: 171717)
+
+#### WNS Registry (`0xbcBC65828Afea72b83C8a07666226d3319739b62`)
+- Human-readable name registration and resolution
+- Name-to-address and address-to-name mapping
+- Name transfer and update functionality
+
+#### Wallet Implementation (`0x269ca8D0fB38Fe18435B2AC70911487ED340B2F3`)
+- Core wallet functionality with EIP-1271 signature validation
+- Social recovery system with guardian management
+- Batch transaction execution
+- Nonce-based transaction ordering
+
+#### Wallet Factory (`0x440Df1c316041B15F08298Da6c267B38Dcd3aE7c`)
+- Creates new smart contract wallets using EIP-1167 minimal proxies
+- Manages wallet initialization and ownership
+- Provides deterministic address prediction
+
+#### Recovery Manager (`0x52d50D41FABB1A2C3434cA79d9a3963D9140C7De`)
 - Manages social recovery processes
 - Guardian coordination and recovery execution
 - Recovery cooldown and security features

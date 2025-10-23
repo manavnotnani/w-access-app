@@ -4,10 +4,12 @@ import Features from "@/components/Features";
 import HowItWorks from "@/components/HowItWorks";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
+import AnnouncementBar from "@/components/AnnouncementBar";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
+      <AnnouncementBar />
       <Header />
       <Hero />
       <Features />
