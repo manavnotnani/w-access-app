@@ -2,10 +2,27 @@
 // This file will be automatically deployed as a serverless function on Vercel
 
 export default async function handler(req, res) {
-  // Enable CORS for all origins
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  // Security: Only allow requests from your domain
+  const allowedOrigins = [
+    'https://www.w-access.xyz',
+    'https://w-access.xyz',
+    // 'http://localhost:8080', // For local development
+    // 'http://localhost:3000'  // For local development
+  ];
+  
+  const origin = req.headers.origin || req.headers.referer;
+  const isAllowedOrigin = allowedOrigins.some(allowed => 
+    origin && origin.startsWith(allowed)
+  );
+
+  if (!isAllowedOrigin) {
+    return res.status(403).json({ error: 'Forbidden: Origin not allowed' });
+  }
+
+  // Set CORS headers for allowed origins only
+  res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
 
   // Handle preflight requests
@@ -18,12 +35,31 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Rate limiting: Basic protection against abuse
+  const rateLimitKey = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  // Note: For production, implement proper rate limiting with Redis or similar
+
   try {
     const { to, code, subject } = req.body;
     
+    // Input validation
     if (!to || !code) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(to)) {
+      return res.status(400).json({ error: 'Invalid email address' });
+    }
+
+    // Code validation (should be 6 digits)
+    if (!/^\d{6}$/.test(code)) {
+      return res.status(400).json({ error: 'Invalid verification code format' });
+    }
+
+    // Subject sanitization
+    const sanitizedSubject = subject ? subject.substring(0, 100) : 'Your W-Access verification code';
 
     const token = process.env.ZEPTO_ZOHO_TOKEN;
     if (!token) {
@@ -128,7 +164,7 @@ export default async function handler(req, res) {
           }
         }
       ],
-      subject: subject || 'Your W-Access verification code',
+      subject: sanitizedSubject,
       htmlbody: html,
     };
 

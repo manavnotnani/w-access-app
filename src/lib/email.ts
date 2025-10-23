@@ -8,9 +8,10 @@ export async function sendOtpEmail(payload: SendOtpPayload): Promise<void> {
   console.log("📧 Starting email send process...");
   console.log("📧 Payload:", { to: payload.to, subject: payload.subject, codeLength: payload.code.length });
   
-  // Use API endpoint - local server for development, Vercel for production
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/send-email';
+  // Use API endpoint - VITE_API_URL from environment, fallback to same origin
+  const apiUrl = import.meta.env.VITE_API_URL || `${window.location.origin}/api/send-email`;
   console.log("🌐 Using API endpoint:", apiUrl);
+  console.log("🌐 Current origin:", window.location.origin);
   
   const response = await fetch(apiUrl, {
     method: "POST",
