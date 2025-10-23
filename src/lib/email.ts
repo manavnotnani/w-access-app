@@ -8,9 +8,9 @@ export async function sendOtpEmail(payload: SendOtpPayload): Promise<void> {
   console.log("📧 Starting email send process...");
   console.log("📧 Payload:", { to: payload.to, subject: payload.subject, codeLength: payload.code.length });
   
-  // Use local server to avoid CORS issues
+  // Use API endpoint - local server for development, Vercel for production
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/send-email';
-  console.log("🌐 Using local server:", apiUrl);
+  console.log("🌐 Using API endpoint:", apiUrl);
   
   const response = await fetch(apiUrl, {
     method: "POST",
