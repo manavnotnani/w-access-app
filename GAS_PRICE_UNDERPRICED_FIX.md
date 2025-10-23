@@ -97,3 +97,6 @@ private static async getGasPriceWithRetry(maxRetries: number = 3): Promise<bigin
 4. **Normal Networks**: Should use network price + 10%
 
 This fix ensures transactions will succeed across different network conditions while maintaining reasonable gas costs.
+
+
+
