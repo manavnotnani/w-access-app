@@ -25,23 +25,23 @@ import WNSRegistryABI from "./abi/WNSRegistry.json";
 import RecoveryManagerABI from "./abi/RecoveryManager.json";
 
 // Get current chain addresses (default to testnet)
-// const currentAddresses = ADDRESSES[71117];
+const currentAddresses = ADDRESSES[71117];
 
-// export const contracts = {
-//   walletFactory: {
-//     address: currentAddresses.WalletFactory,
-//     abi: WalletFactoryABI,
-//   },
-//   walletImplementation: {
-//     address: currentAddresses.WalletImplementation,
-//     abi: WalletImplementationABI,
-//   },
-//   wnsRegistry: {
-//     address: currentAddresses.WNSRegistry,
-//     abi: WNSRegistryABI,
-//   },
-//   recoveryManager: {
-//     address: currentAddresses.RecoveryManager,
-//     abi: RecoveryManagerABI,
-//   },
-// };
+export const contracts = {
+  walletFactory: {
+    address: currentAddresses.WalletFactory,
+    abi: WalletFactoryABI,
+  },
+  walletImplementation: {
+    address: currentAddresses.WalletImplementation,
+    abi: WalletImplementationABI,
+  },
+  wnsRegistry: {
+    address: currentAddresses.WNSRegistry,
+    abi: WNSRegistryABI,
+  },
+  recoveryManager: {
+    address: currentAddresses.RecoveryManager,
+    abi: RecoveryManagerABI,
+  },
+};
