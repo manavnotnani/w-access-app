@@ -1,8 +1,7 @@
 {
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
+  "functions": {
+    "api/send-email.js": {
+      "runtime": "nodejs20.x"
     }
-  ]
+  }
 }

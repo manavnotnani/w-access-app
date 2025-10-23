@@ -63,7 +63,17 @@ const SecuritySetup = () => {
       await sendOtpEmail({ to: recoveryEmail, code, subject: "Your verification code" });
       toast({ title: "Verification code sent", description: "Check your email for the code." });
     } catch (e) {
-      toast({ title: "Error", description: "Could not send verification code.", variant: "destructive" });
+      console.error("❌ Email sending failed in SecuritySetup:", e);
+      console.error("❌ Error details:", {
+        message: e.message,
+        stack: e.stack,
+        name: e.name
+      });
+      toast({ 
+        title: "Error", 
+        description: `Could not send verification code: ${e.message || 'Unknown error'}`, 
+        variant: "destructive" 
+      });
     } finally {
       setIsSendingCode(false);
     }
