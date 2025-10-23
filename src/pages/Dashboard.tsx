@@ -103,7 +103,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+      <div className={`container mx-auto px-4 py-8 ${sendTransactionOpen ? 'pointer-events-none opacity-50' : ''}`}>
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">

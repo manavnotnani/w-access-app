@@ -512,9 +512,9 @@ const Recovery = () => {
                       <Badge variant="secondary" className="text-xs">
                         Implementing Soon
                       </Badge>
-                      <Button variant="outline" size="sm" disabled={true}>
+                      <Badge variant="outline" className="text-yellow-400 border-yellow-400">
                         Coming Soon
-                      </Button>
+                      </Badge>
                     </div>
                   </div>
                 </div>
