@@ -44,7 +44,7 @@ const Hero = () => {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gold/5 via-transparent to-transparent" />
       {/* Grid pattern - make sure to create this file */}
 
-      <div className="container mx-auto px-4 sm:px-6 relative z-20 pt-20 sm:pt-16 pb-8 sm:pb-16">
+      <div className="container mx-auto px-4 sm:px-6 relative z-20 pt-28 sm:pt-24 pb-8 sm:pb-16">
         <motion.div
           className="text-center max-w-4xl mx-auto"
           variants={containerVariants}
