@@ -281,7 +281,7 @@ export const SendTransaction = ({ wallet, isOpen, onClose, onTransactionSent }: 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl z-50">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Send className="w-5 h-5" />
@@ -329,15 +329,16 @@ export const SendTransaction = ({ wallet, isOpen, onClose, onTransactionSent }: 
             
             {/* Recipient Info */}
             {recipientAddress && (
-              <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                <Badge variant="outline">{recipientDisplayName}</Badge>
-                <span className="text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-md text-sm">
+                <Badge variant="outline" className="text-xs">{recipientDisplayName}</Badge>
+                <span className="text-muted-foreground">
                   {recipientAddress.slice(0, 8)}...{recipientAddress.slice(-6)}
                 </span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => copyToClipboard(recipientAddress)}
+                  className="h-6 w-6 p-0"
                 >
                   <Copy className="w-3 h-3" />
                 </Button>
@@ -377,11 +378,9 @@ export const SendTransaction = ({ wallet, isOpen, onClose, onTransactionSent }: 
 
           {/* Transaction Preview */}
           {recipientAddress && amount && (gasEstimate || sponsorshipInfo) && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Transaction Preview</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
+            <div className="space-y-3 p-4 bg-muted/50 rounded-lg border">
+              <div className="text-sm font-medium text-muted-foreground">Transaction Preview</div>
+              <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Amount:</span>
                   <span>{amount} WCO</span>
@@ -391,11 +390,11 @@ export const SendTransaction = ({ wallet, isOpen, onClose, onTransactionSent }: 
                   <span>
                     {sponsorshipInfo ? sponsorshipInfo.gasCost : formatGasCost(gasEstimate!)} WCO
                     {sponsorshipInfo?.willBeSponsored && (
-                      <Badge variant="secondary" className="ml-2">Sponsored</Badge>
+                      <Badge variant="secondary" className="ml-2 text-xs">Sponsored</Badge>
                     )}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm font-semibold">
+                <div className="flex justify-between text-sm font-semibold border-t pt-1">
                   <span>Total:</span>
                   <span>
                     {sponsorshipInfo 
@@ -405,15 +404,13 @@ export const SendTransaction = ({ wallet, isOpen, onClose, onTransactionSent }: 
                   </span>
                 </div>
                 {sponsorshipInfo?.willBeSponsored && (
-                  <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
-                    <div className="flex items-center gap-2 text-sm text-green-700">
-                      <CheckCircle className="w-4 h-4" />
-                      <span>Gas fees will be sponsored by the platform</span>
-                    </div>
+                  <div className="flex items-center gap-1 text-xs text-green-600 mt-1">
+                    <CheckCircle className="w-3 h-3" />
+                    <span>Gas fees sponsored</span>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
         </div>
 
