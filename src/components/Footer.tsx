@@ -53,7 +53,7 @@ const Footer = () => {
             <div className="lg:col-span-1">
               <div className="flex items-center space-x-3 mb-6">
                 <img
-                  src="/lovable-uploads/f03e8d40-ba1a-4f1e-a6c0-d0a28269e251.png"
+                  src="/uploads/f03e8d40-ba1a-4f1e-a6c0-d0a28269e251.png"
                   alt="W-Access"
                   className="w-10 h-10"
                 />
