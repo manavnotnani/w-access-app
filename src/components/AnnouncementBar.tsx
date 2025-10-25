@@ -1,10 +1,23 @@
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Sparkles } from "lucide-react";
+import { Sparkles, ArrowRightLeft } from "lucide-react";
+import { 
+  getCurrentNetworkName, 
+  getOppositeNetworkName, 
+  getOppositeNetworkUrl, 
+  shouldShowNetworkSwitcher 
+} from "@/lib/network";
 
 const AnnouncementBar = () => {
-  const handleContractClick = () => {
-    window.open("https://scan.w-chain.com/address/0xbcBC65828Afea72b83C8a07666226d3319739b62", "_blank");
+  const handleNetworkSwitch = () => {
+    const oppositeUrl = getOppositeNetworkUrl();
+    if (oppositeUrl) {
+      window.location.href = oppositeUrl;
+    }
   };
+
+  const currentNetwork = getCurrentNetworkName();
+  const oppositeNetwork = getOppositeNetworkName();
+  const showSwitcher = shouldShowNetworkSwitcher();
 
   return (
     <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-600 via-purple-600 to-gold text-white py-1 px-4 overflow-hidden z-[60]">
@@ -13,24 +26,27 @@ const AnnouncementBar = () => {
       
       <div className="max-w-4xl mx-auto flex items-center justify-center space-x-1 sm:space-x-2 relative z-10">
         {/* Icon */}
-        <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 animate-pulse" />
         
-        {/* Main message */}
-        <span className="text-xs sm:text-sm font-medium text-center">
-          🚀 Launching soon on W-Chain Mainnet!
+        
+        {/* Main message with glittery effect */}
+        <span className="text-xs sm:text-sm font-medium text-center bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 bg-clip-text text-transparent animate-pulse">
+          🚀 Now live on W-Chain {currentNetwork}!
         </span>
         
-        {/* Contract link button */}
-        <Button
-          onClick={handleContractClick}
-          variant="outline"
-          size="sm"
-          className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white transition-all duration-200 backdrop-blur-sm h-6 px-2 text-xs"
-        >
-          <span className="hidden sm:inline">View W-Access Registry Contract</span>
-          <span className="sm:hidden">Contract</span>
-          <ExternalLink className="w-2 h-2 ml-1" />
-        </Button>
+
+        {/* Network switcher button - always show if URLs are configured */}
+        {showSwitcher && (
+          <Button
+            onClick={handleNetworkSwitch}
+            variant="outline"
+            size="sm"
+            className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white transition-all duration-200 backdrop-blur-sm h-6 px-2 text-xs"
+          >
+            <span className="hidden sm:inline">Switch to {oppositeNetwork}</span>
+            <span className="sm:hidden">{oppositeNetwork}</span>
+            <ArrowRightLeft className="w-2 h-2 ml-1" />
+          </Button>
+        )}
       </div>
       
       {/* Decorative elements */}

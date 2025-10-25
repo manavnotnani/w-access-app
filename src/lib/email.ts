@@ -12,6 +12,7 @@ export async function sendOtpEmail(payload: SendOtpPayload): Promise<void> {
   const apiUrl = import.meta.env.VITE_API_URL || `${window.location.origin}/api/send-email`;
   console.log("🌐 Using API endpoint:", apiUrl);
   console.log("🌐 Current origin:", window.location.origin);
+  console.log("🌐 Current hostname:", window.location.hostname);
   
   const response = await fetch(apiUrl, {
     method: "POST",
