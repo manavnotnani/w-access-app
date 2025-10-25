@@ -2,10 +2,11 @@
 // This file will be automatically deployed as a serverless function on Vercel
 
 export default async function handler(req, res) {
-  // Security: Only allow requests from your domain
+  // Security: Only allow requests from your domains
   const allowedOrigins = [
     'https://www.w-access.xyz',
     'https://w-access.xyz',
+    'https://testnet.w-access.xyz',  // Testnet domain
     // 'http://localhost:8080', // For local development
     // 'http://localhost:3000'  // For local development
   ];
