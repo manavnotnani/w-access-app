@@ -18,9 +18,12 @@ export default async function handler(req, res) {
   );
 
   // Set CORS headers for allowed origins only
-  if (isAllowedOrigin && origin) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
+  if (!isAllowedOrigin) {
+    return res.status(403).json({ error: 'Forbidden: Origin not allowed' });
   }
+
+  // Set CORS headers for allowed origins only
+  res.setHeader('Access-Control-Allow-Origin', origin || '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
