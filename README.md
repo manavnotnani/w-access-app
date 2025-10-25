@@ -30,7 +30,7 @@ A comprehensive Web3 wallet management platform built specifically for the W-Cha
 
 ## 🏗️ Architecture
 
-![W-Access System Architecture](https://pasteboard.co/mqJ4Ecpncf90.png)
+![W-Access System Architecture](./public/images/w-access-architecture.png)
 
 ## 📁 Project Structure
 
