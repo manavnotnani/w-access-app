@@ -91,10 +91,10 @@ graph TD
     %% =========================
     %% NETWORK LAYER
     %% =========================
-    subgraph N["🌐 W-Chain Network"]
-        CHAIN[W-Chain (Testnet/Mainnet)]
-        EXPLORER[Block Explorer]
-    end
+     subgraph N["🌐 W-Chain Network"]
+         CHAIN[W-Chain Testnet/Mainnet]
+         EXPLORER[Block Explorer]
+     end
     class N,CHAIN,EXPLORER network
 
     %% =========================
@@ -463,23 +463,61 @@ For support and questions:
 
 ## 🔮 Roadmap
 
-### Phase 1 (Current)
+### Phase 1 (Current) ✅
 - ✅ Smart contract wallet creation
 - ✅ Basic transaction functionality
 - ✅ PIN-based authentication
 - ✅ Session management
+- ✅ W-Chain Name Service (WNS)
+- ✅ Multi-network support (Testnet & Mainnet)
+- ✅ Transaction sponsorship system
 
-### Phase 2 (In Progress)
-- 🔄 Enhanced recovery system
-- 🔄 Multi-signature support
-- 🔄 Advanced security features
-- 🔄 Mobile app development
+### Phase 2 (Coming Soon) 🚧
+- 🔄 **Enhanced Recovery System**
+  - Multi-guardian recovery with customizable thresholds
+  - Time-locked recovery with emergency procedures
+  - Recovery method verification and backup systems
+- 🔄 **Advanced Security Features**
+  - Hardware wallet integration
+  - Biometric authentication support
+  - Advanced threat detection and monitoring
+- 🔄 **Mobile App Development**
+  - Native iOS and Android applications
+  - Mobile-optimized wallet management
+  - Push notifications for transactions and recovery
+- 🔄 **W-Access SDK Release** 🎯
+  - **JavaScript/TypeScript SDK** for easy integration
+  - **React components library** for quick UI implementation
+  - **API wrapper** for backend integrations
+  - **Documentation and examples** for developers
+  - **Support for other W-Chain applications** to integrate W-Access
 
-### Phase 3 (Planned)
-- 📋 DeFi integration
-- 📋 NFT support
-- 📋 Cross-chain functionality
-- 📋 Enterprise features
+### Phase 3 (Planned) 📋
+- 📋 **DeFi Integration**
+  - Built-in DEX integration
+  - Yield farming and staking interfaces
+  - Portfolio management and analytics
+- 📋 **NFT Support**
+  - NFT marketplace integration
+  - Collection management
+  - Cross-platform NFT transfers
+- 📋 **Cross-chain Functionality**
+  - Bridge integrations
+  - Multi-chain wallet support
+  - Cross-chain transaction routing
+- 📋 **Enterprise Features**
+  - Team wallet management
+  - Advanced governance systems
+  - Enterprise security protocols
+  - Compliance and audit tools
+
+### SDK Integration Benefits 🛠️
+The upcoming W-Access SDK will enable other W-Chain applications to:
+- **Seamlessly integrate** wallet functionality into their projects
+- **Reduce development time** with pre-built components
+- **Maintain security standards** with battle-tested wallet infrastructure
+- **Access W-Chain ecosystem** features like WNS and recovery systems
+- **Provide consistent user experience** across W-Chain applications
 
 ---
 
