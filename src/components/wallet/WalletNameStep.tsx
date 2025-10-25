@@ -10,10 +10,22 @@ import { testSupabaseConnection } from "@/lib/test-connection";
 interface WalletNameStepProps {
   walletName: string;
   setWalletName: (name: string) => void;
+  onAvailabilityChange?: (isAvailable: boolean) => void;
 }
 
-export const WalletNameStep = ({ walletName, setWalletName }: WalletNameStepProps) => {
+export const WalletNameStep = ({ walletName, setWalletName, onAvailabilityChange }: WalletNameStepProps) => {
   const { isChecking, isAvailable, error } = useWalletName(walletName);
+  
+  // Notify parent when availability changes
+  useEffect(() => {
+    if (onAvailabilityChange) {
+      if (!walletName) {
+        onAvailabilityChange(false); // Treat empty name as not available
+      } else {
+        onAvailabilityChange(isAvailable === true);
+      }
+    }
+  }, [isAvailable, walletName, onAvailabilityChange]);
 
   // Test connection on component mount
   useEffect(() => {

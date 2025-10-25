@@ -23,6 +23,7 @@ import { KeyManagementService } from "@/lib/key-management";
 const CreateWallet = () => {
   const [step, setStep] = useState(1);
   const [walletName, setWalletName] = useState("");
+  const [isWalletNameAvailable, setIsWalletNameAvailable] = useState<boolean | null>(null);
   const [showSeedPhrase, setShowSeedPhrase] = useState(false);
   const [confirmedWords, setConfirmedWords] = useState<number[]>([]);
   const [verificationWords, setVerificationWords] = useState<number[]>([]);
@@ -48,6 +49,13 @@ const CreateWallet = () => {
     const shuffled = allIndices.sort(() => 0.5 - Math.random());
     return shuffled.slice(0, 3).sort((a, b) => a - b); // Sort to maintain order
   };
+
+  // Reset availability state when wallet name changes or when leaving step 1
+  useEffect(() => {
+    if (step !== 1) {
+      setIsWalletNameAvailable(null);
+    }
+  }, [step, walletName]);
 
   // Generate random verification words when seed phrase is available
   useEffect(() => {
@@ -294,7 +302,8 @@ const CreateWallet = () => {
         return (
           <WalletNameStep 
             walletName={walletName} 
-            setWalletName={handleWalletNameChange} 
+            setWalletName={handleWalletNameChange}
+            onAvailabilityChange={setIsWalletNameAvailable}
           />
         );
       case 2:
@@ -332,7 +341,7 @@ const CreateWallet = () => {
   const canContinue = () => {
     switch (step) {
       case 1:
-        return walletName && walletName.length >= 3;
+        return walletName && walletName.length >= 3 && isWalletNameAvailable === true;
       case 2:
         return walletKeys !== null && keyGenerationError === null;
       case 3:
