@@ -7,6 +7,7 @@ export default async function handler(req, res) {
     'https://www.w-access.xyz',
     'https://w-access.xyz',
     'https://testnet.w-access.xyz',  // Testnet domain
+    'https://www.testnet.w-access.xyz',
     // 'http://localhost:8080', // For local development
     // 'http://localhost:3000'  // For local development
   ];
@@ -16,6 +17,7 @@ export default async function handler(req, res) {
     origin && origin.startsWith(allowed)
   );
 
+  // Set CORS headers for allowed origins only
   if (!isAllowedOrigin) {
     return res.status(403).json({ error: 'Forbidden: Origin not allowed' });
   }
