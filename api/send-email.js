@@ -7,6 +7,7 @@ export default async function handler(req, res) {
     'https://www.w-access.xyz',
     'https://w-access.xyz',
     'https://testnet.w-access.xyz',  // Testnet domain
+    'https://www.testnet.w-access.xyz',
     // 'http://localhost:8080', // For local development
     // 'http://localhost:3000'  // For local development
   ];
@@ -16,12 +17,10 @@ export default async function handler(req, res) {
     origin && origin.startsWith(allowed)
   );
 
-  if (!isAllowedOrigin) {
-    return res.status(403).json({ error: 'Forbidden: Origin not allowed' });
-  }
-
   // Set CORS headers for allowed origins only
-  res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  if (isAllowedOrigin && origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -30,6 +29,10 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
+  }
+
+  if (!isAllowedOrigin) {
+    return res.status(403).json({ error: 'Forbidden: Origin not allowed' });
   }
 
   if (req.method !== 'POST') {
