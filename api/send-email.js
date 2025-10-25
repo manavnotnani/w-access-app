@@ -34,10 +34,6 @@ export default async function handler(req, res) {
     return;
   }
 
-  if (!isAllowedOrigin) {
-    return res.status(403).json({ error: 'Forbidden: Origin not allowed' });
-  }
-
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
