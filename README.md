@@ -11,6 +11,8 @@ A comprehensive Web3 wallet management platform built specifically for the W-Cha
 - **PIN Authentication**: Secure PIN-based access without exposing private keys
 - **Transaction Sponsorship**: Automatic gas fee sponsorship for expensive transactions
 - **Session Management**: Secure session-based wallet access with automatic expiration
+- **Multi-Network Support**: Full support for both W-Chain Testnet and Mainnet
+- **Network Switching**: Seamless switching between testnet and mainnet environments
 
 ### User Experience
 - **Instant Wallet Creation**: Create wallets in seconds with streamlined onboarding
@@ -29,70 +31,102 @@ A comprehensive Web3 wallet management platform built specifically for the W-Cha
 ## 🏗️ Architecture
 
 ```mermaid
-graph TB
-    subgraph "Frontend Layer"
+graph TD
+    %% =========================
+    %% STYLE DEFINITIONS
+    %% =========================
+    classDef frontend fill:#E3F2FD,stroke:#2196F3,stroke-width:1px,color:#0D47A1;
+    classDef service fill:#E8F5E9,stroke:#43A047,stroke-width:1px,color:#1B5E20;
+    classDef blockchain fill:#FFF3E0,stroke:#FB8C00,stroke-width:1px,color:#E65100;
+    classDef infra fill:#F3E5F5,stroke:#8E24AA,stroke-width:1px,color:#4A148C;
+    classDef network fill:#E0F7FA,stroke:#00838F,stroke-width:1px,color:#004D40;
+    classDef connection stroke-dasharray: 3 3;
+
+    %% =========================
+    %% FRONTEND LAYER
+    %% =========================
+    subgraph F["💻 Frontend Layer"]
         UI[React Frontend]
         COMP[Components]
         PAGES[Pages]
         HOOKS[Custom Hooks]
     end
-    
-    subgraph "Service Layer"
+    class F,UI,COMP,PAGES,HOOKS frontend
+
+    %% =========================
+    %% SERVICE LAYER
+    %% =========================
+    subgraph S["⚙️ Service Layer"]
         TS[Transaction Service]
         KS[Key Management Service]
         WS[Wallet Service]
         FS[Funding Service]
         NS[Name Service]
     end
-    
-    subgraph "Blockchain Layer"
+    class S,TS,KS,WS,FS,NS service
+
+    %% =========================
+    %% BLOCKCHAIN LAYER
+    %% =========================
+    subgraph B["⛓️ Blockchain Layer"]
         SC[Smart Contracts]
         WF[Wallet Factory]
         WI[Wallet Implementation]
         WNS[WNS Registry]
         RM[Recovery Manager]
     end
-    
-    subgraph "Infrastructure"
+    class B,SC,WF,WI,WNS,RM blockchain
+
+    %% =========================
+    %% INFRASTRUCTURE LAYER
+    %% =========================
+    subgraph I["🧱 Infrastructure"]
         SB[Supabase Database]
         SESSION[Session Storage]
         LOCAL[Local Storage]
         RELAY[Transaction Relayer]
     end
-    
-    subgraph "W-Chain Network"
-        CHAIN[W-Chain Testnet/Mainnet]
+    class I,SB,SESSION,LOCAL,RELAY infra
+
+    %% =========================
+    %% NETWORK LAYER
+    %% =========================
+    subgraph N["🌐 W-Chain Network"]
+        CHAIN[W-Chain (Testnet/Mainnet)]
         EXPLORER[Block Explorer]
     end
-    
-    UI --> COMP
-    COMP --> PAGES
-    PAGES --> HOOKS
-    
+    class N,CHAIN,EXPLORER network
+
+    %% =========================
+    %% CONNECTIONS
+    %% =========================
+    UI --> COMP --> PAGES --> HOOKS
+
     UI --> TS
     UI --> KS
     UI --> WS
     UI --> FS
     UI --> NS
-    
+
     TS --> SC
     WS --> SC
     NS --> SC
     FS --> SC
-    
+
     SC --> WF
     SC --> WI
     SC --> WNS
     SC --> RM
-    
-    WS --> SB
-    KS --> SESSION
-    KS --> LOCAL
-    FS --> RELAY
-    
+
+    WS -.-> SB
+    KS -.-> SESSION
+    KS -.-> LOCAL
+    FS -.-> RELAY
+
     SC --> CHAIN
-    CHAIN --> EXPLORER
     RELAY --> CHAIN
+    CHAIN --> EXPLORER
+
 ```
 
 ## 📁 Project Structure
@@ -182,6 +216,11 @@ w-access/
    
    # Server Configuration (for wallet funding)
    VITE_SERVER_PRIVATE_KEY=your_server_private_key
+   
+   # Network Configuration
+   VITE_NETWORK_TYPE=testnet  # or 'mainnet'
+   VITE_TESTNET_URL=https://testnet.w-access.xyz
+   VITE_MAINNET_URL=https://w-access.xyz
    ```
 
 4. **Database Setup**
@@ -204,51 +243,88 @@ w-access/
 
 ## 📋 Smart Contracts
 
-### Testnet Contracts (Chain ID: 71117)
+### W-Chain Testnet (Chain ID: 71117)
 
 #### Wallet Factory (`0x52d50D41FABB1A2C3434cA79d9a3963D9140C7De`)
 - Creates new smart contract wallets using EIP-1167 minimal proxies
 - Manages wallet initialization and ownership
 - Provides deterministic address prediction
+- **Network**: W-Chain Testnet
+- **Explorer**: [View on Explorer](https://explorer.w-chain.com/address/0x52d50D41FABB1A2C3434cA79d9a3963D9140C7De)
 
 #### Wallet Implementation (`0x440Df1c316041B15F08298Da6c267B38Dcd3aE7c`)
 - Core wallet functionality with EIP-1271 signature validation
 - Social recovery system with guardian management
 - Batch transaction execution
 - Nonce-based transaction ordering
+- **Network**: W-Chain Testnet
+- **Explorer**: [View on Explorer](https://explorer.w-chain.com/address/0x440Df1c316041B15F08298Da6c267B38Dcd3aE7c)
 
 #### WNS Registry (`0x269ca8D0fB38Fe18435B2AC70911487ED340B2F3`)
 - Human-readable name registration and resolution
 - Name-to-address and address-to-name mapping
 - Name transfer and update functionality
+- **Network**: W-Chain Testnet
+- **Explorer**: [View on Explorer](https://explorer.w-chain.com/address/0x269ca8D0fB38Fe18435B2AC70911487ED340B2F3)
 
 #### Recovery Manager (`0x7C2930C0AA1E7A17694EdF82e6d1Ae4E6ef3f607`)
 - Manages social recovery processes
 - Guardian coordination and recovery execution
 - Recovery cooldown and security features
+- **Network**: W-Chain Testnet
+- **Explorer**: [View on Explorer](https://explorer.w-chain.com/address/0x7C2930C0AA1E7A17694EdF82e6d1Ae4E6ef3f607)
 
-### Mainnet Contracts (Chain ID: 171717)
+### W-Chain Mainnet (Chain ID: 171717)
 
 #### WNS Registry (`0xbcBC65828Afea72b83C8a07666226d3319739b62`)
 - Human-readable name registration and resolution
 - Name-to-address and address-to-name mapping
 - Name transfer and update functionality
+- **Network**: W-Chain Mainnet
+- **Explorer**: [View on Explorer](https://explorer.w-chain.com/address/0xbcBC65828Afea72b83C8a07666226d3319739b62)
 
 #### Wallet Implementation (`0x269ca8D0fB38Fe18435B2AC70911487ED340B2F3`)
 - Core wallet functionality with EIP-1271 signature validation
 - Social recovery system with guardian management
 - Batch transaction execution
 - Nonce-based transaction ordering
+- **Network**: W-Chain Mainnet
+- **Explorer**: [View on Explorer](https://explorer.w-chain.com/address/0x269ca8D0fB38Fe18435B2AC70911487ED340B2F3)
 
 #### Wallet Factory (`0x440Df1c316041B15F08298Da6c267B38Dcd3aE7c`)
 - Creates new smart contract wallets using EIP-1167 minimal proxies
 - Manages wallet initialization and ownership
 - Provides deterministic address prediction
+- **Network**: W-Chain Mainnet
+- **Explorer**: [View on Explorer](https://explorer.w-chain.com/address/0x440Df1c316041B15F08298Da6c267B38Dcd3aE7c)
 
 #### Recovery Manager (`0x52d50D41FABB1A2C3434cA79d9a3963D9140C7De`)
 - Manages social recovery processes
 - Guardian coordination and recovery execution
 - Recovery cooldown and security features
+- **Network**: W-Chain Mainnet
+- **Explorer**: [View on Explorer](https://explorer.w-chain.com/address/0x52d50D41FABB1A2C3434cA79d9a3963D9140C7De)
+
+## 🌐 Network Support
+
+### W-Chain Testnet (Chain ID: 71117)
+- **RPC URL**: `https://rpc-testnet.w-chain.com`
+- **Explorer**: `https://explorer.w-chain.com`
+- **Purpose**: Development and testing
+- **Status**: ✅ Active
+
+### W-Chain Mainnet (Chain ID: 171717)
+- **RPC URL**: `https://rpc.w-chain.com`
+- **Explorer**: `https://explorer.w-chain.com`
+- **Purpose**: Production deployment
+- **Status**: ✅ Active
+
+### Network Switching
+The application supports seamless switching between testnet and mainnet:
+- Automatic network detection based on environment variables
+- Persistent network selection in localStorage
+- Network-specific contract addresses and configurations
+- Cross-network URL generation for easy switching
 
 ## 🔐 Security Features
 
