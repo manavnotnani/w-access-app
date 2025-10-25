@@ -6,7 +6,7 @@ import type { Abi } from "viem";
 import { encodeFunctionData } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
-import { activeChain, contracts, publicClient, walletClient } from "./eth";
+import { activeChain, contracts, getPublicClient, getWalletClient, getContracts } from "./eth";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -26,32 +26,33 @@ export function validateEmail(email: string): boolean {
 }
 
 export async function getGuardianCount(): Promise<bigint> {
-  const params = {
-    address: contracts.walletImplementation.address,
-    abi: contracts.walletImplementation.abi as unknown as Abi,
+  const currentContracts = getContracts();
+  const result = await getPublicClient().readContract({
+    address: currentContracts.walletImplementation.address,
+    abi: currentContracts.walletImplementation.abi as unknown as Abi,
     functionName: "getGuardianCount",
     args: [],
-  } as unknown as Parameters<typeof publicClient.readContract>[0];
-
-  const result = await publicClient.readContract(params);
+  } as any);
   return result as bigint;
 }
 
 export async function addGuardian(guardian: `0x${string}`) {
+  const walletClient = getWalletClient();
   if (!walletClient) throw new Error("Wallet not connected");
   const [account] = await walletClient.getAddresses();
 
+  const currentContracts = getContracts();
   const params = {
     chain: activeChain,
     account,
-    address: contracts.walletImplementation.address,
-    abi: contracts.walletImplementation.abi as unknown as Abi,
+    address: currentContracts.walletImplementation.address,
+    abi: currentContracts.walletImplementation.abi as unknown as Abi,
     functionName: "addGuardian",
     args: [guardian],
   } as unknown as Parameters<typeof walletClient.writeContract>[0];
 
   const hash = await walletClient.writeContract(params);
-  return publicClient.waitForTransactionReceipt({ hash });
+  return getPublicClient().waitForTransactionReceipt({ hash });
 }
 
 // Gas estimation interface
@@ -75,9 +76,10 @@ export const estimateWalletCreationGas = async (name: string, privateKey: string
     
     try {
       // Try to estimate gas using the contract method
-      estimatedGas = await publicClient.estimateContractGas({
-        address: contracts.walletFactory.address,
-        abi: contracts.walletFactory.abi,
+      const currentContracts = getContracts();
+      estimatedGas = await getPublicClient().estimateContractGas({
+        address: currentContracts.walletFactory.address,
+        abi: currentContracts.walletFactory.abi,
         functionName: 'createWallet',
         args: [name],
         account: account.address,
@@ -108,11 +110,11 @@ export const estimateWalletCreationGas = async (name: string, privateKey: string
     
     try {
       // Try to get EIP-1559 gas parameters for better cost optimization
-      const feeData = await publicClient.estimateFeesPerGas();
+      const feeData = await getPublicClient().estimateFeesPerGas();
       if (feeData.maxFeePerGas && feeData.maxPriorityFeePerGas) {
         gasPrice = feeData.maxFeePerGas; // Use maxFeePerGas for cost calculation
       } else {
-        gasPrice = await publicClient.getGasPrice();
+        gasPrice = await getPublicClient().getGasPrice();
       }
     } catch (error) {
       // Fallback to a reasonable gas price if RPC calls fail
@@ -149,19 +151,20 @@ export const deploySmartContractWallet = async (name: string, privateKey: string
     
     // First, let's check if the contracts are actually deployed
     try {
-      const factoryCode = await publicClient.getCode({
-        address: contracts.walletFactory.address,
+      const currentContracts = getContracts();
+      const factoryCode = await getPublicClient().getCode({
+        address: currentContracts.walletFactory.address,
       });
-      const implCode = await publicClient.getCode({
-        address: contracts.walletImplementation.address,
+      const implCode = await getPublicClient().getCode({
+        address: currentContracts.walletImplementation.address,
       });
       
       
       if (!factoryCode || factoryCode === '0x') {
-        throw new Error(`WalletFactory contract not deployed at ${contracts.walletFactory.address}`);
+        throw new Error(`WalletFactory contract not deployed at ${currentContracts.walletFactory.address}`);
       }
       if (!implCode || implCode === '0x') {
-        throw new Error(`WalletImplementation contract not deployed at ${contracts.walletImplementation.address}`);
+        throw new Error(`WalletImplementation contract not deployed at ${currentContracts.walletImplementation.address}`);
       }
       
       
@@ -174,7 +177,7 @@ export const deploySmartContractWallet = async (name: string, privateKey: string
     const { gasWithBuffer, gasPrice, gasCost } = gasEstimate;
     
     // Check if the account has sufficient balance for gas
-    const balance = await publicClient.getBalance({
+    const balance = await getPublicClient().getBalance({
       address: account.address,
     });
     
@@ -191,8 +194,9 @@ export const deploySmartContractWallet = async (name: string, privateKey: string
     // Encode the function call data for the transaction
     let data: string;
     try {
+      const currentContracts = getContracts();
       data = encodeFunctionData({
-        abi: contracts.walletFactory.abi,
+        abi: currentContracts.walletFactory.abi,
         functionName: 'createWallet',
         args: [name],
       });
@@ -208,7 +212,7 @@ export const deploySmartContractWallet = async (name: string, privateKey: string
     // Get the nonce for the account
     let nonce: number;
     try {
-      nonce = await publicClient.getTransactionCount({
+      nonce = await getPublicClient().getTransactionCount({
         address: account.address,
         blockTag: 'pending'
       });
@@ -222,8 +226,9 @@ export const deploySmartContractWallet = async (name: string, privateKey: string
     }
 
     // Create the transaction with proper gas estimation and EIP-1559 if available
+    const currentContracts = getContracts();
     const transaction: any = {
-      to: contracts.walletFactory.address,
+      to: currentContracts.walletFactory.address,
       data,
       gas: gasWithBuffer,
       nonce,
@@ -249,13 +254,13 @@ export const deploySmartContractWallet = async (name: string, privateKey: string
     const signedTransaction = await account.signTransaction(transaction);
 
     // Send the raw transaction
-    const hash = await publicClient.sendRawTransaction({
+    const hash = await getPublicClient().sendRawTransaction({
       serializedTransaction: signedTransaction,
     });
     
     
     // Wait for confirmation
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    const receipt = await getPublicClient().waitForTransactionReceipt({ hash });
     
     
     // Check if transaction was reverted
@@ -263,9 +268,10 @@ export const deploySmartContractWallet = async (name: string, privateKey: string
       
       // Try to get the revert reason by simulating the transaction
       try {
-        const simulateResult = await publicClient.simulateContract({
-          address: contracts.walletFactory.address,
-          abi: contracts.walletFactory.abi,
+        const currentContracts = getContracts();
+        const simulateResult = await getPublicClient().simulateContract({
+          address: currentContracts.walletFactory.address,
+          abi: currentContracts.walletFactory.abi,
           functionName: 'createWallet',
           args: [name],
           account: account.address,

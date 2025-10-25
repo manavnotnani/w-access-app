@@ -1,7 +1,6 @@
 import { createWalletClient, createPublicClient, http, parseEther, formatEther, encodeFunctionData, getContract, keccak256, toHex, encodePacked } from "viem";
 import { privateKeyToAccount, signMessage } from "viem/accounts";
-import { activeChain } from "./eth";
-import { contracts } from "./addresses";
+import { getActiveChain, getContracts } from "./eth";
 import { walletService } from "./database";
 import { KeyManagementService } from "./key-management";
 import { FundingService } from "./funding";
@@ -28,10 +27,12 @@ export interface WalletBalance {
 }
 
 export class TransactionService {
-  private static publicClient = createPublicClient({
-    chain: activeChain,
-    transport: http(),
-  });
+  private static getPublicClient() {
+    return createPublicClient({
+      chain: getActiveChain(),
+      transport: http(),
+    });
+  }
 
   /**
    * Get a reasonable gas price for transactions
@@ -39,7 +40,7 @@ export class TransactionService {
    */
   private static async getReasonableGasPrice(): Promise<bigint> {
     try {
-      const currentGasPrice = await this.publicClient.getGasPrice();
+      const currentGasPrice = await this.getPublicClient().getGasPrice();
       
       // More reasonable caps based on typical gas prices
       const minGasPrice = parseEther("0.000000001"); // 1 gwei minimum
@@ -128,12 +129,14 @@ export class TransactionService {
    */
   private static async getWalletNonce(walletAddress: string): Promise<bigint> {
     try {
-      const nonce = await this.publicClient.readContract({
+      const contracts = getContracts();
+      const nonce = await this.getPublicClient().readContract({
         address: walletAddress as `0x${string}`,
         abi: contracts.walletImplementation.abi,
         functionName: 'nonce',
+        args: [],
         authorizationList: [],
-      });
+      } as any);
       return nonce as bigint;
     } catch (error) {
       throw new Error("Failed to get wallet nonce");
@@ -154,7 +157,7 @@ export class TransactionService {
     try {
       // Create the transaction hash as per the smart contract
       // keccak256(abi.encodePacked(chainId, address(this), dest, value, func, nonce))
-      const chainId = BigInt(activeChain.id);
+      const chainId = BigInt(getActiveChain().id);
       
       // Use viem's encodePacked to match Solidity's abi.encodePacked
       const packedData = encodePacked(
@@ -168,7 +171,7 @@ export class TransactionService {
       // Create wallet client for signing
       const walletClient = createWalletClient({
         account,
-        chain: activeChain,
+        chain: getActiveChain(),
         transport: http(),
       });
 
@@ -190,7 +193,7 @@ export class TransactionService {
    */
   private static async getAggressiveGasPrice(): Promise<bigint> {
     try {
-      const currentGasPrice = await this.publicClient.getGasPrice();
+      const currentGasPrice = await this.getPublicClient().getGasPrice();
       
       // For networks that require higher gas prices, use a more aggressive strategy
       const minGasPrice = parseEther("0.0000001"); // 100 gwei minimum
@@ -224,7 +227,7 @@ export class TransactionService {
    */
   static async getWalletBalance(walletAddress: string): Promise<WalletBalance> {
     try {
-      const balance = await this.publicClient.getBalance({
+      const balance = await this.getPublicClient().getBalance({
         address: walletAddress as `0x${string}`,
       });
 
@@ -247,7 +250,7 @@ export class TransactionService {
     amount: string
   ): Promise<bigint> {
     try {
-      const gasEstimate = await this.publicClient.estimateGas({
+      const gasEstimate = await this.getPublicClient().estimateGas({
         account: fromAddress as `0x${string}`,
         to: toAddress as `0x${string}`,
         value: parseEther(amount),
@@ -290,7 +293,7 @@ export class TransactionService {
       const account = privateKeyToAccount(privateKey as `0x${string}`);
       const walletClient = createWalletClient({
         account,
-        chain: activeChain,
+        chain: getActiveChain(),
         transport: http(),
       });
 
@@ -299,7 +302,7 @@ export class TransactionService {
       const amountWei = parseEther(request.amount);
 
       // Get current balance of owner's account (for gas fees)
-      const ownerBalance = await this.publicClient.getBalance({
+      const ownerBalance = await this.getPublicClient().getBalance({
         address: account.address as `0x${string}`
       });
 
@@ -316,6 +319,9 @@ export class TransactionService {
         walletNonce
       );
 
+      // Get contracts for the current network
+      const contracts = getContracts();
+      
       // Create the transaction data for the execute function
       const executeData = encodeFunctionData({
         abi: contracts.walletImplementation.abi,
@@ -329,7 +335,7 @@ export class TransactionService {
       });
 
       // Estimate gas for the contract call (server will be sender)
-      const gasEstimate = await this.publicClient.estimateGas({
+      const gasEstimate = await this.getPublicClient().estimateGas({
         account: FundingService.getServerAddress() as `0x${string}`,
         to: wallet.address as `0x${string}`,
         data: executeData,
@@ -413,7 +419,7 @@ export class TransactionService {
       const hash = relay.transactionHash as `0x${string}`;
 
       // Wait for confirmation
-      await this.publicClient.waitForTransactionReceipt({ hash });
+      await this.getPublicClient().waitForTransactionReceipt({ hash });
 
       return {
         success: true,

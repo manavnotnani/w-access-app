@@ -1,6 +1,6 @@
 import { createWalletClient, http, parseEther, formatEther, createPublicClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { activeChain } from "./eth";
+import { getActiveChain } from "./eth";
 
 // Server private key for funding wallets (should be stored securely in environment variables)
 const SERVER_PRIVATE_KEY_RAW = import.meta.env.VITE_SERVER_PRIVATE_KEY;
@@ -52,23 +52,27 @@ export class FundingService {
     }
   })();
   
-  private static serverWalletClient = createWalletClient({
-    account: this.serverAccount,
-    chain: activeChain,
-    transport: http(activeChain.rpcUrls.default.http[0]),
-  });
+  private static getServerWalletClient() {
+    return createWalletClient({
+      account: this.serverAccount,
+      chain: getActiveChain(),
+      transport: http(getActiveChain().rpcUrls.default.http[0]),
+    });
+  }
   
-  private static publicClient = createPublicClient({
-    chain: activeChain,
-    transport: http(activeChain.rpcUrls.default.http[0]),
-  });
+  private static getPublicClient() {
+    return createPublicClient({
+      chain: getActiveChain(),
+      transport: http(getActiveChain().rpcUrls.default.http[0]),
+    });
+  }
 
   /**
    * Check server account balance
    */
   static async getServerBalance(): Promise<string> {
     try {
-      const balance = await this.publicClient.getBalance({
+      const balance = await this.getPublicClient().getBalance({
         address: this.serverAccount.address,
       });
       return formatEther(balance);
@@ -105,7 +109,7 @@ export class FundingService {
       const hasBalance = await this.hasSufficientBalance(fundingAmount);
       
       // Check if wallet already has sufficient funds
-      const walletBalance = await this.publicClient.getBalance({
+      const walletBalance = await this.getPublicClient().getBalance({
         address: walletAddress as `0x${string}`,
       });
       
@@ -134,7 +138,7 @@ export class FundingService {
    */
   static async isWalletFunded(walletAddress: string, requiredAmount: string): Promise<boolean> {
     try {
-      const walletBalance = await this.publicClient.getBalance({
+      const walletBalance = await this.getPublicClient().getBalance({
         address: walletAddress as `0x${string}`,
       });
       
@@ -160,16 +164,16 @@ export class FundingService {
       }
 
       // Get nonce for the transaction
-      const nonce = await this.publicClient.getTransactionCount({
+      const nonce = await this.getPublicClient().getTransactionCount({
         address: this.serverAccount.address,
         blockTag: 'pending'
       });
 
       // Get gas price
-      const gasPrice = await this.publicClient.getGasPrice();
+      const gasPrice = await this.getPublicClient().getGasPrice();
 
       // Estimate gas
-      const gasEstimate = await this.publicClient.estimateGas({
+      const gasEstimate = await this.getPublicClient().estimateGas({
         account: this.serverAccount.address,
         to: walletAddress as `0x${string}`,
         value: parseEther(amount),
@@ -186,12 +190,12 @@ export class FundingService {
 
       // Sign and send transaction
       const signedTransaction = await this.serverAccount.signTransaction(transaction);
-      const hash = await this.publicClient.sendRawTransaction({
+      const hash = await this.getPublicClient().sendRawTransaction({
         serializedTransaction: signedTransaction,
       });
 
       // Wait for transaction confirmation
-      await this.publicClient.waitForTransactionReceipt({ hash });
+      await this.getPublicClient().waitForTransactionReceipt({ hash });
 
       return {
         success: true,
@@ -281,10 +285,10 @@ export class FundingService {
       const value = params.value ?? 0n;
 
       // Resolve gas price
-      const gasPrice = params.gasPrice ?? (await this.publicClient.getGasPrice());
+      const gasPrice = params.gasPrice ?? (await this.getPublicClient().getGasPrice());
 
       // Estimate gas if not provided
-      const gas = params.gas ?? (await this.publicClient.estimateGas({
+      const gas = params.gas ?? (await this.getPublicClient().estimateGas({
         account: this.serverAccount.address,
         to,
         data,
@@ -293,20 +297,20 @@ export class FundingService {
 
       // Ensure server has enough balance for gas + value
       const gasCost = gas * gasPrice;
-      const serverBalance = await this.publicClient.getBalance({ address: this.serverAccount.address });
+      const serverBalance = await this.getPublicClient().getBalance({ address: this.serverAccount.address });
       if (serverBalance < gasCost + value) {
         return { success: false, error: `Relayer insufficient balance. Needed: ${formatEther(gasCost + value)} WCO, Available: ${formatEther(serverBalance)} WCO` };
       }
 
       // Nonce for server account
-      const nonce = await this.publicClient.getTransactionCount({
+      const nonce = await this.getPublicClient().getTransactionCount({
         address: this.serverAccount.address,
         blockTag: 'pending'
       });
 
       // Build legacy tx (chain uses legacy gasPrice per current setup)
       const tx = {
-        chainId: Number(activeChain.id),
+        chainId: Number(getActiveChain().id),
         to,
         data,
         value,
@@ -317,8 +321,8 @@ export class FundingService {
 
       // Sign & send
       const signed = await this.serverAccount.signTransaction(tx);
-      const hash = await this.publicClient.sendRawTransaction({ serializedTransaction: signed });
-      await this.publicClient.waitForTransactionReceipt({ hash });
+      const hash = await this.getPublicClient().sendRawTransaction({ serializedTransaction: signed });
+      await this.getPublicClient().waitForTransactionReceipt({ hash });
 
       return { success: true, transactionHash: hash };
     } catch (error) {

@@ -1,6 +1,5 @@
 import { createPublicClient, http, getContract } from "viem";
-import { activeChain } from "./eth";
-import { contracts } from "./addresses";
+import { getActiveChain, getContracts } from "./eth";
 import { walletService } from "./database";
 
 export interface NameResolutionResult {
@@ -10,10 +9,12 @@ export interface NameResolutionResult {
 }
 
 export class NameResolutionService {
-  private static publicClient = createPublicClient({
-    chain: activeChain,
-    transport: http(),
-  });
+  private static getPublicClient() {
+    return createPublicClient({
+      chain: getActiveChain(),
+      transport: http(),
+    });
+  }
 
   /**
    * Check if a name exists in the database
@@ -86,8 +87,8 @@ export class NameResolutionService {
       }
 
       // If not found in database, try blockchain
-      
-      const address = await this.publicClient.readContract({
+      const contracts = getContracts();
+      const address = await this.getPublicClient().readContract({
         address: contracts.wnsRegistry.address,
         abi: contracts.wnsRegistry.abi,
         functionName: 'getNameOwner',
@@ -129,7 +130,8 @@ export class NameResolutionService {
       }
 
       // Call the WNS registry contract
-      const name = await this.publicClient.readContract({
+      const contracts = getContracts();
+      const name = await this.getPublicClient().readContract({
         address: contracts.wnsRegistry.address,
         abi: contracts.wnsRegistry.abi,
         functionName: 'getAddressName',
@@ -173,7 +175,8 @@ export class NameResolutionService {
       const cleanName = name.replace(/\.w-chain$/, '');
 
       // Call the WNS registry contract
-      const isAvailable = await this.publicClient.readContract({
+      const contracts = getContracts();
+      const isAvailable = await this.getPublicClient().readContract({
         address: contracts.wnsRegistry.address,
         abi: contracts.wnsRegistry.abi,
         functionName: 'isNameAvailable',
