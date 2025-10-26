@@ -12,11 +12,11 @@ const Footer = () => {
       { name: "Features", href: "#features" },
       { name: "How It Works", href: "/coming-soon", isComingSoon: true },
       { name: "Pricing", href: "/coming-soon", isComingSoon: true },
-      { name: "Demo", href: "/coming-soon", isComingSoon: true },
+      { name: "Demo", href: "https://www.youtube.com/watch?v=t79ZZjy4ZJI", isExternal: true },
     ],
     Resources: [
-      { name: "Documentation", href: "/coming-soon", isComingSoon: true },
-      { name: "API Reference", href: "/coming-soon", isComingSoon: true },
+      { name: "Documentation", href: "https://github.com/manavnotnani/w-access-app#readme", isExternal: true },
+      { name: "API Reference", href: "https://github.com/manavnotnani/w-access-app#readme", isExternal: true },
       { name: "Community", href: "/coming-soon", isComingSoon: true },
       { name: "Support", href: "/coming-soon", isComingSoon: true },
     ],
@@ -33,6 +33,8 @@ const Footer = () => {
       setIsContactModalOpen(true);
     } else if (link.isComingSoon) {
       navigate("/coming-soon");
+    } else if (link.isExternal) {
+      window.open(link.href, '_blank');
     }
   };
 
