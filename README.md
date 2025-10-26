@@ -11,6 +11,8 @@ A comprehensive Web3 wallet management platform built specifically for the W-Cha
 - **PIN Authentication**: Secure PIN-based access without exposing private keys
 - **Transaction Sponsorship**: Automatic gas fee sponsorship for expensive transactions
 - **Session Management**: Secure session-based wallet access with automatic expiration
+- **Multi-Network Support**: Full support for both W-Chain Testnet and Mainnet
+- **Network Switching**: Seamless switching between testnet and mainnet environments
 
 ### User Experience
 - **Instant Wallet Creation**: Create wallets in seconds with streamlined onboarding
@@ -28,72 +30,7 @@ A comprehensive Web3 wallet management platform built specifically for the W-Cha
 
 ## 🏗️ Architecture
 
-```mermaid
-graph TB
-    subgraph "Frontend Layer"
-        UI[React Frontend]
-        COMP[Components]
-        PAGES[Pages]
-        HOOKS[Custom Hooks]
-    end
-    
-    subgraph "Service Layer"
-        TS[Transaction Service]
-        KS[Key Management Service]
-        WS[Wallet Service]
-        FS[Funding Service]
-        NS[Name Service]
-    end
-    
-    subgraph "Blockchain Layer"
-        SC[Smart Contracts]
-        WF[Wallet Factory]
-        WI[Wallet Implementation]
-        WNS[WNS Registry]
-        RM[Recovery Manager]
-    end
-    
-    subgraph "Infrastructure"
-        SB[Supabase Database]
-        SESSION[Session Storage]
-        LOCAL[Local Storage]
-        RELAY[Transaction Relayer]
-    end
-    
-    subgraph "W-Chain Network"
-        CHAIN[W-Chain Testnet/Mainnet]
-        EXPLORER[Block Explorer]
-    end
-    
-    UI --> COMP
-    COMP --> PAGES
-    PAGES --> HOOKS
-    
-    UI --> TS
-    UI --> KS
-    UI --> WS
-    UI --> FS
-    UI --> NS
-    
-    TS --> SC
-    WS --> SC
-    NS --> SC
-    FS --> SC
-    
-    SC --> WF
-    SC --> WI
-    SC --> WNS
-    SC --> RM
-    
-    WS --> SB
-    KS --> SESSION
-    KS --> LOCAL
-    FS --> RELAY
-    
-    SC --> CHAIN
-    CHAIN --> EXPLORER
-    RELAY --> CHAIN
-```
+![W-Access System Architecture](./public/images/w-access-architecture.png)
 
 ## 📁 Project Structure
 
@@ -182,6 +119,11 @@ w-access/
    
    # Server Configuration (for wallet funding)
    VITE_SERVER_PRIVATE_KEY=your_server_private_key
+   
+   # Network Configuration
+   VITE_NETWORK_TYPE=testnet  # or 'mainnet'
+   VITE_TESTNET_URL=https://testnet.w-access.xyz
+   VITE_MAINNET_URL=https://w-access.xyz
    ```
 
 4. **Database Setup**
@@ -204,51 +146,88 @@ w-access/
 
 ## 📋 Smart Contracts
 
-### Testnet Contracts (Chain ID: 71117)
+### W-Chain Testnet (Chain ID: 71117)
 
 #### Wallet Factory (`0x52d50D41FABB1A2C3434cA79d9a3963D9140C7De`)
 - Creates new smart contract wallets using EIP-1167 minimal proxies
 - Manages wallet initialization and ownership
 - Provides deterministic address prediction
+- **Network**: W-Chain Testnet
+- **Explorer**: [View on Explorer](https://explorer.w-chain.com/address/0x52d50D41FABB1A2C3434cA79d9a3963D9140C7De)
 
 #### Wallet Implementation (`0x440Df1c316041B15F08298Da6c267B38Dcd3aE7c`)
 - Core wallet functionality with EIP-1271 signature validation
 - Social recovery system with guardian management
 - Batch transaction execution
 - Nonce-based transaction ordering
+- **Network**: W-Chain Testnet
+- **Explorer**: [View on Explorer](https://explorer.w-chain.com/address/0x440Df1c316041B15F08298Da6c267B38Dcd3aE7c)
 
 #### WNS Registry (`0x269ca8D0fB38Fe18435B2AC70911487ED340B2F3`)
 - Human-readable name registration and resolution
 - Name-to-address and address-to-name mapping
 - Name transfer and update functionality
+- **Network**: W-Chain Testnet
+- **Explorer**: [View on Explorer](https://explorer.w-chain.com/address/0x269ca8D0fB38Fe18435B2AC70911487ED340B2F3)
 
 #### Recovery Manager (`0x7C2930C0AA1E7A17694EdF82e6d1Ae4E6ef3f607`)
 - Manages social recovery processes
 - Guardian coordination and recovery execution
 - Recovery cooldown and security features
+- **Network**: W-Chain Testnet
+- **Explorer**: [View on Explorer](https://explorer.w-chain.com/address/0x7C2930C0AA1E7A17694EdF82e6d1Ae4E6ef3f607)
 
-### Mainnet Contracts (Chain ID: 171717)
+### W-Chain Mainnet (Chain ID: 171717)
 
 #### WNS Registry (`0xbcBC65828Afea72b83C8a07666226d3319739b62`)
 - Human-readable name registration and resolution
 - Name-to-address and address-to-name mapping
 - Name transfer and update functionality
+- **Network**: W-Chain Mainnet
+- **Explorer**: [View on Explorer](https://explorer.w-chain.com/address/0xbcBC65828Afea72b83C8a07666226d3319739b62)
 
 #### Wallet Implementation (`0x269ca8D0fB38Fe18435B2AC70911487ED340B2F3`)
 - Core wallet functionality with EIP-1271 signature validation
 - Social recovery system with guardian management
 - Batch transaction execution
 - Nonce-based transaction ordering
+- **Network**: W-Chain Mainnet
+- **Explorer**: [View on Explorer](https://explorer.w-chain.com/address/0x269ca8D0fB38Fe18435B2AC70911487ED340B2F3)
 
 #### Wallet Factory (`0x440Df1c316041B15F08298Da6c267B38Dcd3aE7c`)
 - Creates new smart contract wallets using EIP-1167 minimal proxies
 - Manages wallet initialization and ownership
 - Provides deterministic address prediction
+- **Network**: W-Chain Mainnet
+- **Explorer**: [View on Explorer](https://explorer.w-chain.com/address/0x440Df1c316041B15F08298Da6c267B38Dcd3aE7c)
 
 #### Recovery Manager (`0x52d50D41FABB1A2C3434cA79d9a3963D9140C7De`)
 - Manages social recovery processes
 - Guardian coordination and recovery execution
 - Recovery cooldown and security features
+- **Network**: W-Chain Mainnet
+- **Explorer**: [View on Explorer](https://explorer.w-chain.com/address/0x52d50D41FABB1A2C3434cA79d9a3963D9140C7De)
+
+## 🌐 Network Support
+
+### W-Chain Testnet (Chain ID: 71117)
+- **RPC URL**: `https://rpc-testnet.w-chain.com`
+- **Explorer**: `https://explorer.w-chain.com`
+- **Purpose**: Development and testing
+- **Status**: ✅ Active
+
+### W-Chain Mainnet (Chain ID: 171717)
+- **RPC URL**: `https://rpc.w-chain.com`
+- **Explorer**: `https://explorer.w-chain.com`
+- **Purpose**: Production deployment
+- **Status**: ✅ Active
+
+### Network Switching
+The application supports seamless switching between testnet and mainnet:
+- Automatic network detection based on environment variables
+- Persistent network selection in localStorage
+- Network-specific contract addresses and configurations
+- Cross-network URL generation for easy switching
 
 ## 🔐 Security Features
 
@@ -387,23 +366,61 @@ For support and questions:
 
 ## 🔮 Roadmap
 
-### Phase 1 (Current)
+### Phase 1 (Current) ✅
 - ✅ Smart contract wallet creation
 - ✅ Basic transaction functionality
 - ✅ PIN-based authentication
 - ✅ Session management
+- ✅ W-Chain Name Service (WNS)
+- ✅ Multi-network support (Testnet & Mainnet)
+- ✅ Transaction sponsorship system
 
-### Phase 2 (In Progress)
-- 🔄 Enhanced recovery system
-- 🔄 Multi-signature support
-- 🔄 Advanced security features
-- 🔄 Mobile app development
+### Phase 2 (Coming Soon) 🚧
+- 🔄 **Enhanced Recovery System**
+  - Multi-guardian recovery with customizable thresholds
+  - Time-locked recovery with emergency procedures
+  - Recovery method verification and backup systems
+- 🔄 **Advanced Security Features**
+  - Hardware wallet integration
+  - Biometric authentication support
+  - Advanced threat detection and monitoring
+- 🔄 **Mobile App Development**
+  - Native iOS and Android applications
+  - Mobile-optimized wallet management
+  - Push notifications for transactions and recovery
+- 🔄 **W-Access SDK Release** 🎯
+  - **JavaScript/TypeScript SDK** for easy integration
+  - **React components library** for quick UI implementation
+  - **API wrapper** for backend integrations
+  - **Documentation and examples** for developers
+  - **Support for other W-Chain applications** to integrate W-Access
 
-### Phase 3 (Planned)
-- 📋 DeFi integration
-- 📋 NFT support
-- 📋 Cross-chain functionality
-- 📋 Enterprise features
+### Phase 3 (Planned) 📋
+- 📋 **DeFi Integration**
+  - Built-in DEX integration
+  - Yield farming and staking interfaces
+  - Portfolio management and analytics
+- 📋 **NFT Support**
+  - NFT marketplace integration
+  - Collection management
+  - Cross-platform NFT transfers
+- 📋 **Cross-chain Functionality**
+  - Bridge integrations
+  - Multi-chain wallet support
+  - Cross-chain transaction routing
+- 📋 **Enterprise Features**
+  - Team wallet management
+  - Advanced governance systems
+  - Enterprise security protocols
+  - Compliance and audit tools
+
+### SDK Integration Benefits 🛠️
+The upcoming W-Access SDK will enable other W-Chain applications to:
+- **Seamlessly integrate** wallet functionality into their projects
+- **Reduce development time** with pre-built components
+- **Maintain security standards** with battle-tested wallet infrastructure
+- **Access W-Chain ecosystem** features like WNS and recovery systems
+- **Provide consistent user experience** across W-Chain applications
 
 ---
 

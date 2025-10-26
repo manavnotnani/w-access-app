@@ -105,7 +105,7 @@ const HowItWorks = () => {
               </div>
 
               <Button 
-                onClick={() => navigate('/coming-soon')}
+                onClick={() => window.open('https://www.youtube.com/watch?v=t79ZZjy4ZJI', '_blank')}
                 className="bg-gradient-hero text-primary-foreground hover:shadow-glow transition-all duration-300"
               >
                 Try Interactive Demo
