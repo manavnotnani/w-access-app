@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Sparkles, ArrowRightLeft } from "lucide-react";
+import { ArrowRightLeft } from "lucide-react";
 import { 
   getCurrentNetworkName, 
   getOppositeNetworkName, 
@@ -20,11 +20,11 @@ const AnnouncementBar = () => {
   const showSwitcher = shouldShowNetworkSwitcher();
 
   return (
-    <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-600 via-purple-600 to-gold text-white py-1 px-4 overflow-hidden z-[60]">
+    <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-600 via-purple-600 to-gold text-white h-8 overflow-hidden z-[60]">
       {/* Background animation */}
       <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-gold/20 animate-pulse" />
       
-      <div className="max-w-4xl mx-auto flex items-center justify-center space-x-1 sm:space-x-2 relative z-10">
+      <div className="max-w-4xl mx-auto flex items-center justify-center space-x-1 sm:space-x-2 relative z-10 h-full">
         {/* Icon */}
         
         
