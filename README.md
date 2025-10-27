@@ -400,10 +400,10 @@ For support and questions:
   - Built-in DEX integration
   - Yield farming and staking interfaces
   - Portfolio management and analytics
-- 📋 **NFT Support**
-  - NFT marketplace integration
-  - Collection management
-  - Cross-platform NFT transfers
+- 📋 **Name Marketplace**
+  - Secondary marketplace for trading W-Chain names
+  - Name auction and bidding system
+  - Premium name trading platform
 - 📋 **Cross-chain Functionality**
   - Bridge integrations
   - Multi-chain wallet support

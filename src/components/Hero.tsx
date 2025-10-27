@@ -76,7 +76,7 @@ const Hero = () => {
             variants={childVariants}
           >
             Experience seamless wallet creation, human-readable addresses, and
-            secure management – making mass adoption a reality.
+            secure management – making mass adoption a reality
           </motion.p>
 
           {/* Key Features */}
