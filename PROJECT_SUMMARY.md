@@ -287,7 +287,7 @@ w-access/
 - DeFi integration
 
 ### Phase 3 (Future)
-- NFT support
+- Name marketplace for trading W-Chain names
 - Cross-chain functionality
 - Enterprise features
 - Advanced analytics
